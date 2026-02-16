@@ -1,0 +1,121 @@
+import { FileText, Wand2, BarChart2, Cpu, CheckCircle2 } from "lucide-react";
+
+const steps = [
+  {
+    icon: FileText,
+    title: "Text Input",
+    description: "Paste your news article or upload a text file for analysis",
+    color: "bg-primary",
+  },
+  {
+    icon: Wand2,
+    title: "Text Preprocessing",
+    description: "Cleaning, tokenization, and normalization of the input text",
+    color: "bg-secondary",
+  },
+  {
+    icon: BarChart2,
+    title: "Feature Extraction",
+    description: "TF-IDF vectorization and n-gram analysis for pattern recognition",
+    color: "bg-accent",
+  },
+  {
+    icon: Cpu,
+    title: "ML Classification",
+    description: "Ensemble of trained models analyze the extracted features",
+    color: "bg-success",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Prediction Output",
+    description: "Real or Fake verdict with confidence score and explanations",
+    color: "bg-primary",
+  },
+];
+
+export function HowItWorks() {
+  return (
+    <section id="how-it-works" className="py-20 lg:py-32 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-muted/30" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20 text-sm font-medium text-secondary mb-6">
+            <Cpu className="w-4 h-4" />
+            <span>The Process</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            How It{" "}
+            <span className="gradient-text">Works</span>
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Our AI-powered pipeline processes your text through multiple stages to deliver accurate results
+          </p>
+        </div>
+
+        {/* Timeline */}
+        <div className="relative max-w-5xl mx-auto">
+          {/* Connection Line - Desktop */}
+          <div className="hidden lg:block absolute top-20 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-full" />
+
+          {/* Steps */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4">
+            {steps.map((step, index) => (
+              <div
+                key={step.title}
+                className="relative group animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Mobile/Tablet Connection Line */}
+                {index < steps.length - 1 && (
+                  <div className="lg:hidden absolute left-1/2 top-full h-6 w-0.5 bg-gradient-to-b from-border to-transparent -translate-x-1/2 sm:hidden" />
+                )}
+
+                <div className="glass rounded-2xl p-6 text-center hover-lift h-full">
+                  {/* Step Number */}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-card border-2 border-border flex items-center justify-center text-xs font-bold">
+                    {index + 1}
+                  </div>
+
+                  {/* Icon */}
+                  <div className={`w-16 h-16 rounded-2xl ${step.color} flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <step.icon className="w-8 h-8 text-primary-foreground" />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div className="mt-16 max-w-4xl mx-auto">
+          <div className="glass rounded-3xl p-8 lg:p-10">
+            <div className="grid md:grid-cols-3 gap-8 text-center">
+              <div>
+                <div className="text-3xl font-bold gradient-text mb-2">{"<1s"}</div>
+                <div className="text-sm text-muted-foreground">Average analysis time</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold gradient-text mb-2">5+ Models</div>
+                <div className="text-sm text-muted-foreground">Ensemble classification</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold gradient-text mb-2">Real-time</div>
+                <div className="text-sm text-muted-foreground">Instant predictions</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
