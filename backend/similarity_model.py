@@ -6,7 +6,8 @@ import nltk
 
 HF_API_KEY = os.getenv("HF_API_KEY")
 
-MODEL_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
+MODEL_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2"
+
 
 headers = {
     "Authorization": f"Bearer {HF_API_KEY}"
