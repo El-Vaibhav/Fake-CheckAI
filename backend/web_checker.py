@@ -4,7 +4,7 @@ from readability import Document
 import requests
 
 
-def search_duckduckgo(query, max_results=5):
+def search_duckduckgo(query, max_results=8):
     results_list = []
 
     with DDGS() as ddgs:
@@ -22,16 +22,30 @@ def search_duckduckgo(query, max_results=5):
 
 def extract_text_from_url(url):
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=5)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept-Language": "en-US,en;q=0.9"
+        }
 
-        doc = Document(response.text)
-        html = doc.summary()
+        response = requests.get(url, headers=headers, timeout=10)
 
-        soup = BeautifulSoup(html, "html.parser")
+        if response.status_code != 200:
+            return ""
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Remove scripts and styles
+        for script in soup(["script", "style", "noscript"]):
+            script.decompose()
+
         paragraphs = soup.find_all("p")
 
-        text = " ".join([p.get_text() for p in paragraphs])
+        text = " ".join(
+            p.get_text(strip=True)
+            for p in paragraphs
+            if len(p.get_text(strip=True)) > 40
+        )
+
         return text.strip()
 
     except Exception as e:
@@ -40,9 +54,9 @@ def extract_text_from_url(url):
 
 
 def get_risk_level(score):
-    if score > 75:
+    if score > 70:
         return "High"
-    elif score > 50:
+    elif score > 45:
         return "Moderate"
     else:
         return "Low"
@@ -57,7 +71,7 @@ def check_web_similarity(user_text):
     )
 
     query = user_text[:200]
-    search_results = search_duckduckgo(query, max_results=5)
+    search_results = search_duckduckgo(query, max_results=8)
 
     report = []
     highest_score = 0
@@ -66,9 +80,13 @@ def check_web_similarity(user_text):
         url = result["link"]
         title = result["title"]
 
+        print("Processing:", url)
+
         web_text = extract_text_from_url(url)
 
-        if len(web_text) < 300:
+        print("Extracted length:", len(web_text))
+
+        if len(web_text) < 150:
             continue
 
         overall_score = compute_overall_similarity(user_text, web_text)
