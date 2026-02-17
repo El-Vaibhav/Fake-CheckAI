@@ -102,7 +102,18 @@ def check_web_similarity(user_text):
             "matched_sentences": sentence_matches[:3]
         })
 
+    # Sort by similarity
     report = sorted(report, key=lambda x: x["similarity"], reverse=True)
+
+    if report:
+      for item in report:
+        item["similarity"] = round(min(item["similarity"] + 15, 100.0), 2)
+
+    # Recalculate highest AFTER boosting
+        highest_score = report[0]["similarity"]
+    else:
+      highest_score = 0
+
 
     return {
         "highest_similarity": highest_score,
