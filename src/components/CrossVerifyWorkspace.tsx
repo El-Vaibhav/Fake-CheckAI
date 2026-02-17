@@ -56,7 +56,7 @@ export function CrossVerifyWorkspace() {
     /* ===============================
        Drag & Drop
     ================================ */
-    const handleDrop = useCallback((e: React.DragEvent) => {
+    const handleDrop = useCallback(async (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
 
@@ -71,10 +71,34 @@ export function CrossVerifyWorkspace() {
                 setText((event.target?.result as string).slice(0, maxChars));
             };
             reader.readAsText(file);
+        } if (file.type === "application/pdf") {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_BASE_URL}/extract-pdf`,
+                    {
+                        method: "POST",
+                        body: formData,
+                    }
+                );
+
+                const data = await response.json();
+
+                if (data.text) {
+                    setText(data.text.slice(0, maxChars));
+                }
+            } catch (err) {
+                console.error("PDF extraction error:", err);
+            }
         }
+
+
+
     }, []);
 
-    const handleFileInput = (
+    const handleFileInput = async (
         e: React.ChangeEvent<HTMLInputElement>
     ) => {
         const file = e.target.files?.[0];
@@ -89,13 +113,78 @@ export function CrossVerifyWorkspace() {
             };
             reader.readAsText(file);
         }
-    };
 
+        // ✅ PDF Handling (backend extraction)
+        if (file.type === "application/pdf") {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch(
+                    `${import.meta.env.VITE_API_BASE_URL}/extract-pdf`,
+                    {
+                        method: "POST",
+                        body: formData,
+                    }
+                );
+
+                const data = await response.json();
+
+                if (data.text) {
+                    setText(data.text.slice(0, maxChars));
+                } else {
+                    alert("Failed to extract PDF text.");
+                }
+            } catch (err) {
+                console.error("PDF extraction error:", err);
+                alert("PDF extraction failed.");
+            }
+        }
+    };
     const clearAll = () => {
         setText("");
         setFileName(null);
         setResult(null);
     };
+    const handleDownloadPDF = async () => {
+        if (!result) return;
+
+        const reportPayload = {
+            prediction: result.risk_level + " Similarity Risk",
+            confidence: result.highest_similarity,
+            credibility_score: 100 - result.highest_similarity,
+            article_text: text,
+            reasons: result.sources.map(
+                (s: any) =>
+                    `${s.title} (${s.similarity}% similarity)`
+            ),
+        };
+
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_BASE_URL}/download-report`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(reportPayload),
+                }
+            );
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "cross_verification_report.pdf";
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Download failed:", error);
+            alert("PDF download failed.");
+        }
+    };
+
 
     return (
         <section id="cross-workspace" className="py-24 relative">
@@ -153,22 +242,22 @@ export function CrossVerifyWorkspace() {
                             onDragLeave={() => setIsDragging(false)}
                             onDrop={handleDrop}
                             className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 ${isDragging
-                                    ? "border-accent bg-accent/5 scale-[1.02]"
-                                    : "border-border hover:border-accent/50 hover:bg-muted/40"
+                                ? "border-accent bg-accent/5 scale-[1.02]"
+                                : "border-border hover:border-accent/50 hover:bg-muted/40"
                                 }`}
                         >
                             <input
                                 type="file"
-                                accept=".txt"
+                                accept=".txt,.pdf"
                                 onChange={handleFileInput}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                             <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
                             <p className="font-medium mb-1">
-                                Drag & drop your .txt file here
+                                Drag & drop your .pdf/.txt file here
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                Supports .txt files
+                                Supports .txt and .pdf files
                             </p>
                         </div>
 
@@ -260,10 +349,10 @@ export function CrossVerifyWorkspace() {
                             <div className="relative overflow-hidden rounded-3xl p-12 shadow-2xl border border-border bg-gradient-to-br from-background to-muted/30">
 
                                 <div className={`absolute inset-0 blur-3xl opacity-20 ${result.risk_level === "High"
-                                        ? "bg-red-500"
-                                        : result.risk_level === "Moderate"
-                                            ? "bg-yellow-400"
-                                            : "bg-green-500"
+                                    ? "bg-red-500"
+                                    : result.risk_level === "Moderate"
+                                        ? "bg-yellow-400"
+                                        : "bg-green-500"
                                     }`} />
 
                                 <div className="relative text-center">
@@ -274,10 +363,10 @@ export function CrossVerifyWorkspace() {
                                     <div className="w-full max-w-xl mx-auto h-4 bg-muted rounded-full overflow-hidden mb-6">
                                         <div
                                             className={`h-full transition-all duration-1000 ${result.risk_level === "High"
-                                                    ? "bg-gradient-to-r from-red-500 to-red-700"
-                                                    : result.risk_level === "Moderate"
-                                                        ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                                                        : "bg-gradient-to-r from-green-400 to-green-600"
+                                                ? "bg-gradient-to-r from-red-500 to-red-700"
+                                                : result.risk_level === "Moderate"
+                                                    ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                                                    : "bg-gradient-to-r from-green-400 to-green-600"
                                                 }`}
                                             style={{ width: `${result.highest_similarity}%` }}
                                         />
@@ -285,17 +374,27 @@ export function CrossVerifyWorkspace() {
 
                                     <span
                                         className={`px-5 py-2 rounded-full text-sm font-semibold ${result.risk_level === "High"
-                                                ? "bg-red-500/10 text-red-500 border border-red-500/40"
-                                                : result.risk_level === "Moderate"
-                                                    ? "bg-yellow-400/10 text-yellow-500 border border-yellow-400/40"
-                                                    : "bg-green-500/10 text-green-500 border border-green-500/40"
+                                            ? "bg-red-500/10 text-red-500 border border-red-500/40"
+                                            : result.risk_level === "Moderate"
+                                                ? "bg-yellow-400/10 text-yellow-500 border border-yellow-400/40"
+                                                : "bg-green-500/10 text-green-500 border border-green-500/40"
                                             }`}
                                     >
                                         {result.risk_level} Similarity Risk
                                     </span>
                                 </div>
                             </div>
-
+                            {/* DOWNLOAD BUTTON */}
+                            <div className="text-center mt-8">
+                                <Button
+                                    variant="hero"
+                                    size="xl"
+                                    onClick={handleDownloadPDF}
+                                >
+                                    Download Verification Report
+                                </Button>
+                            </div>
+                            
                             {/* SOURCE CARDS */}
                             <div className="space-y-10">
                                 {(result?.sources || []).map((source: any, index: number) => {
