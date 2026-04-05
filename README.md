@@ -13,15 +13,25 @@ Backend API: https://fake-checkai-8.onrender.com/
 
 ![Ss 2](image-1.png)
 
+<br><br>
+
+
 ![Ss 3](image-2.png)
 
+<br><br>
+
+
 ![Ss 4](image-3.png)
+<br><br>
 
 ![Ss 5](image-4.png)
+<br><br>
 
 ![Ss 6](image-5.png)
+<br><br>
 
 ![Ss 7](image-6.png)
+<br><br>
 
 # 🧠 Core Modules
 
