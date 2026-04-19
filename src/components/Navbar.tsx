@@ -67,12 +67,12 @@ export function Navbar() {
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsDark(!isDark)}
-              className="rounded-full"
+              className="rounded-full h-9 w-9 sm:h-10 sm:w-10"
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
@@ -98,7 +98,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden rounded-full"
+              className="lg:hidden rounded-full h-9 w-9"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -113,7 +113,7 @@ export function Navbar() {
           isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="glass-strong border-t border-border/50 px-4 py-4 space-y-1">
+        <div className="glass-strong border-t border-border/50 px-3 py-3 space-y-1">
           {navItems.map((item) => (
             <a
               key={item.name}

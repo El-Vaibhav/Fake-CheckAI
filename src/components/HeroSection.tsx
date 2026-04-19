@@ -8,15 +8,15 @@ export function HeroSection() {
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 lg:pt-20"
+      className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-10 lg:pt-20 lg:pb-0"
       style={{ background: "var(--gradient-hero)" }}
     >
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Gradient Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-pulse-slow animation-delay-200" />
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-secondary/20 rounded-full blur-3xl animate-pulse-slow animation-delay-400" />
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 md:w-96 md:h-96 bg-primary/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/4 right-1/4 w-56 h-56 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl animate-pulse-slow animation-delay-200" />
+        <div className="absolute top-1/2 right-1/3 w-44 h-44 md:w-64 md:h-64 bg-secondary/20 rounded-full blur-3xl animate-pulse-slow animation-delay-400" />
 
         {/* Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(79,70,229,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(79,70,229,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
@@ -25,7 +25,7 @@ export function HeroSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Content */}
-          <div className="space-y-8 text-center lg:text-left">
+          <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary animate-fade-in-up">
               <Zap className="w-4 h-4" />
@@ -33,7 +33,7 @@ export function HeroSection() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight animate-fade-in-up animation-delay-100">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight animate-fade-in-up animation-delay-100">
               Detect{" "}
               <span className="gradient-text">Fake News</span>
               <br />
@@ -43,14 +43,14 @@ export function HeroSection() {
             </h1>
 
             {/* Subheading */}
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-200">
+            <p className="text-base sm:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-200">
               Paste any news article and instantly know whether it's real or fake using advanced machine learning models trained on millions of articles.
             </p>
 
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-start animate-fade-in-up animation-delay-300 max-w-3xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 justify-center lg:justify-start animate-fade-in-up animation-delay-300 max-w-3xl w-full">
 
               <a href="#detect">
-                <Button variant="hero" size="lg" className="group">
+                <Button variant="hero" size="lg" className="group w-full sm:w-auto">
                   <Search className="w-7 h-7" />
                   Analyze News
                   <ArrowRight className="w-7 h-7 transition-transform group-hover:translate-x-1" />
@@ -58,7 +58,7 @@ export function HeroSection() {
               </a>
 
               <a href="#how-it-works">
-                <Button variant="hero-outline" size="lg">
+                <Button variant="hero-outline" size="lg" className="w-full sm:w-auto">
                   <BookOpen className="w-7 h-7" />
                   Learn How It Works
                 </Button>
@@ -67,6 +67,7 @@ export function HeroSection() {
               <Button
                 variant="hero"
                 size="lg"
+                className="w-full sm:w-auto"
                 onClick={() => navigate("/ai-detector")}
               >
                 Try Our AI Detector 
@@ -75,7 +76,7 @@ export function HeroSection() {
               <Button
                 variant="hero-outline"
                 size="lg"
-                className="relative"
+                className="relative w-full sm:w-auto"
                 onClick={() => navigate("/cross-verify")}
               >
                 Try Our New Source Verification Model
@@ -90,7 +91,7 @@ export function HeroSection() {
 
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-8 animate-fade-in-up animation-delay-400">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-5 sm:pt-8 animate-fade-in-up animation-delay-400">
               {[
                 { value: "95%+", label: "Accuracy" },
                 { value: "50K+", label: "Articles Analyzed" },
@@ -186,7 +187,7 @@ export function HeroSection() {
       </div>
 
       {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden sm:block">
         <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
           <div className="w-1 h-2 bg-muted-foreground/50 rounded-full animate-pulse" />
         </div>

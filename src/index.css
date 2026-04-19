@@ -119,11 +119,13 @@
 
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -283,4 +285,36 @@
 
 .animation-delay-500 {
   animation-delay: 500ms;
+}
+
+@media (max-width: 768px) {
+  .glass,
+  .glass-strong {
+    backdrop-filter: blur(6px);
+  }
+
+  .animate-float,
+  .animate-pulse-slow,
+  .animate-bounce {
+    animation: none !important;
+  }
+
+  .hover-lift:hover {
+    transform: none;
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
