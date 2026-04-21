@@ -399,7 +399,7 @@ export function DetectionWorkspace() {
                 Paste News Article URL
               </label>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
                   value={url}
@@ -410,6 +410,7 @@ export function DetectionWorkspace() {
 
                 <Button
                   variant="outline"
+                  className="w-full sm:w-auto sm:shrink-0"
                   onClick={handleAnalyzeURL}
                   disabled={!url.trim() || isFetchingUrl}
                 >

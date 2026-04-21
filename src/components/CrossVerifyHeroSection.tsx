@@ -57,8 +57,8 @@ export function CrossVerifyHeroSection() {
 
             {/* CTA */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up">
-              <a href="#cross-workspace">
-                <Button variant="hero" size="xl" className="w-full sm:w-auto group">
+              <a href="#cross-workspace" className="w-full sm:w-auto">
+                <Button variant="hero" size="xl" className="w-full sm:w-auto group whitespace-normal text-center h-auto min-h-14 py-3">
                   <Search className="w-5 h-5" />
                   Start Cross Verification
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -68,7 +68,7 @@ export function CrossVerifyHeroSection() {
               <Button
                 variant="hero-outline"
                 size="xl"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto whitespace-normal text-center h-auto min-h-14 py-3"
                 onClick={() => navigate("/")}
               >
                 <Layers className="w-5 h-5" />
@@ -78,7 +78,7 @@ export function CrossVerifyHeroSection() {
               <Button
                 variant="hero"
                 size="xl"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto whitespace-normal text-center h-auto min-h-14 py-3"
                 onClick={() => navigate("/ai-detector")}
               >
                 Try Our AI Detector
