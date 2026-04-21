@@ -210,7 +210,7 @@ export function CrossVerifyWorkspace() {
 
                 {/* WORKSPACE CARD */}
                 <div className="max-w-5xl mx-auto">
-                    <div className="glass rounded-3xl p-8 shadow-2xl border border-border">
+                    <div className="glass rounded-3xl p-5 sm:p-8 shadow-2xl border border-border">
 
                         {/* TEXTAREA */}
                         <textarea
@@ -405,7 +405,7 @@ export function CrossVerifyWorkspace() {
                                             key={index}
                                             className="group relative rounded-3xl p-8 shadow-xl border border-border bg-card hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
                                         >
-                                            <div className="grid grid-cols-[1fr_auto] gap-6 items-start">
+                                            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-start">
 
                                                 <div>
                                                     <a
@@ -426,7 +426,7 @@ export function CrossVerifyWorkspace() {
                                                     </div>
                                                 </div>
 
-                                                <div className="text-right">
+                                                <div className="text-left sm:text-right">
                                                     <div className="text-2xl font-bold">
                                                         {source.similarity}%
                                                     </div>
