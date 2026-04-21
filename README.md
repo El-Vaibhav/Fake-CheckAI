@@ -6,32 +6,32 @@ Frontend: https://fakecheckai.netlify.app/
 Backend API: https://fake-checkai-8.onrender.com/
 
 ---
-
+# WebApp Screenshots
 ![Ss 1](image.png)
-
 <br><br>
-
 ![Ss 2](image-1.png)
-
 <br><br>
-
-
 ![Ss 3](image-2.png)
-
 <br><br>
-
-
 ![Ss 4](image-3.png)
 <br><br>
-
 ![Ss 5](image-4.png)
 <br><br>
-
 ![Ss 6](image-5.png)
 <br><br>
-
 ![Ss 7](image-6.png)
 <br><br>
+
+# MobileApp Screenshots
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/be0203ff-9000-4087-aea2-ab8742a7ab9b" width="18%" style="vertical-align: top;" />
+  <img src="https://github.com/user-attachments/assets/35fdb51f-a742-49f8-bda5-1b8d58995545" width="18%" style="vertical-align: top;" />
+  <img src="https://github.com/user-attachments/assets/93b06ee0-1e6e-4a30-ac21-c77d4dc6e277" width="18%" style="vertical-align: top;" />
+  <img src="https://github.com/user-attachments/assets/aed6929b-8c33-4dbc-80e5-4f801101bb57"  width="18%" style="vertical-align: top;" />
+</p>
+
+
 
 # 🧠 Core Modules
 
