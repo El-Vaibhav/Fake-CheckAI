@@ -47,18 +47,18 @@ export function HeroSection() {
               Paste any news article and instantly know whether it's real or fake using advanced machine learning models trained on millions of articles.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 justify-center lg:justify-start animate-fade-in-up animation-delay-300 max-w-3xl w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 animate-fade-in-up animation-delay-300 max-w-3xl w-full">
 
-              <a href="#detect">
-                <Button variant="hero" size="lg" className="group w-full sm:min-w-[220px] sm:w-auto sm:justify-center">
+              <a href="#detect" className="w-full">
+                <Button variant="hero" size="lg" className="group w-full min-h-14 py-3 text-center whitespace-normal leading-snug">
                   <Search className="w-5 h-5" />
                   Analyze News
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </a>
 
-              <a href="#how-it-works">
-                <Button variant="hero-outline" size="lg" className="w-full sm:min-w-[220px] sm:w-auto sm:justify-center">
+              <a href="#how-it-works" className="w-full">
+                <Button variant="hero-outline" size="lg" className="w-full min-h-14 py-3 text-center whitespace-normal leading-snug">
                   <BookOpen className="w-5 h-5" />
                   Learn How It Works
                 </Button>
@@ -67,7 +67,7 @@ export function HeroSection() {
               <Button
                 variant="hero"
                 size="lg"
-                className="w-full sm:min-w-[220px] sm:w-auto sm:justify-center"
+                className="w-full min-h-14 py-3 text-center whitespace-normal leading-snug"
                 onClick={() => navigate("/ai-detector")}
               >
                 Try Our AI Detector
@@ -76,7 +76,7 @@ export function HeroSection() {
               <Button
                 variant="hero-outline"
                 size="lg"
-                className="w-full sm:col-span-2 sm:w-auto sm:justify-center"
+                className="w-full min-h-14 py-3 text-center whitespace-normal leading-snug"
                 onClick={() => navigate("/cross-verify")}
               >
                 Try Our New Source Verification Model
