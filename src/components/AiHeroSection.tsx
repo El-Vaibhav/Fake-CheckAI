@@ -47,9 +47,9 @@ export function AiHeroSection() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up">
-              <a href="#aidetect" className="w-full sm:w-auto">
-                <Button variant="hero" size="xl" className="w-full sm:w-auto group whitespace-normal text-center h-auto min-h-14 py-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up max-w-5xl">
+              <a href="#aidetect" className="w-full">
+                <Button variant="hero" size="lg" className="w-full h-12 px-6 group text-center whitespace-nowrap text-sm">
                   <Search className="w-5 h-5" />
                   Analyze for AI
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -58,8 +58,8 @@ export function AiHeroSection() {
 
               <Button
                 variant="hero-outline"
-                size="xl"
-                className="w-full sm:w-auto whitespace-normal text-center h-auto min-h-14 py-3"
+                size="lg"
+                className="w-full h-12 px-6 text-center whitespace-nowrap text-sm"
                 onClick={() => navigate("/")}
               >
                 <BookOpen className="w-5 h-5" />
@@ -67,14 +67,12 @@ export function AiHeroSection() {
               </Button>
               <Button
                 variant="hero-outline"
-                size="xl"
-                className="relative w-full sm:w-auto whitespace-normal text-center h-auto min-h-14 py-3"
+                size="lg"
+                className="w-full h-12 px-4 text-center whitespace-nowrap text-sm"
                 onClick={() => navigate("/cross-verify")}
               >
                 Try Our New Source Verification Model
-
-                {/* NEW badge */}
-                <span className="absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-md">
+                <span className="ml-1 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-sm">
                   NEW
                 </span>
               </Button>
