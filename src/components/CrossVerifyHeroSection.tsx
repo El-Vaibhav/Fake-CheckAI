@@ -56,9 +56,9 @@ export function CrossVerifyHeroSection() {
             </p>
 
             {/* CTA */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up max-w-5xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in-up max-w-4xl">
               <a href="#cross-workspace" className="w-full">
-                <Button variant="hero" size="lg" className="w-full h-12 px-6 group text-center whitespace-nowrap text-sm">
+                <Button variant="hero" size="lg" className="w-full min-h-12 px-5 py-3 group text-center whitespace-normal leading-snug text-base">
                   <Search className="w-5 h-5" />
                   Start Cross Verification
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -68,7 +68,7 @@ export function CrossVerifyHeroSection() {
               <Button
                 variant="hero-outline"
                 size="lg"
-                className="w-full h-12 px-6 text-center whitespace-nowrap text-sm"
+                className="w-full min-h-12 px-5 py-3 text-center whitespace-normal leading-snug text-base"
                 onClick={() => navigate("/")}
               >
                 <Layers className="w-5 h-5" />
@@ -78,7 +78,7 @@ export function CrossVerifyHeroSection() {
               <Button
                 variant="hero"
                 size="lg"
-                className="w-full h-12 px-6 text-center whitespace-nowrap text-sm"
+                className="w-full sm:col-span-2 min-h-12 px-5 py-3 text-center whitespace-normal leading-snug text-base"
                 onClick={() => navigate("/ai-detector")}
               >
                 Try Our AI Detector
