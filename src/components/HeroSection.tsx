@@ -50,16 +50,16 @@ export function HeroSection() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 justify-center lg:justify-start animate-fade-in-up animation-delay-300 max-w-3xl w-full">
 
               <a href="#detect">
-                <Button variant="hero" size="lg" className="group w-full sm:w-auto">
-                  <Search className="w-7 h-7" />
+                <Button variant="hero" size="lg" className="group w-full sm:min-w-[220px] sm:w-auto sm:justify-center">
+                  <Search className="w-5 h-5" />
                   Analyze News
-                  <ArrowRight className="w-7 h-7 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </a>
 
               <a href="#how-it-works">
-                <Button variant="hero-outline" size="lg" className="w-full sm:w-auto">
-                  <BookOpen className="w-7 h-7" />
+                <Button variant="hero-outline" size="lg" className="w-full sm:min-w-[220px] sm:w-auto sm:justify-center">
+                  <BookOpen className="w-5 h-5" />
                   Learn How It Works
                 </Button>
               </a>
@@ -67,22 +67,20 @@ export function HeroSection() {
               <Button
                 variant="hero"
                 size="lg"
-                className="w-full sm:w-auto"
+                className="w-full sm:min-w-[220px] sm:w-auto sm:justify-center"
                 onClick={() => navigate("/ai-detector")}
               >
-                Try Our AI Detector 
+                Try Our AI Detector
               </Button>
 
               <Button
                 variant="hero-outline"
                 size="lg"
-                className="relative w-full sm:w-auto"
+                className="w-full sm:col-span-2 sm:w-auto sm:justify-center"
                 onClick={() => navigate("/cross-verify")}
               >
                 Try Our New Source Verification Model
-
-                {/* NEW badge */}
-                <span className="absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-md">
+                <span className="ml-1 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-sm">
                   NEW
                 </span>
               </Button>

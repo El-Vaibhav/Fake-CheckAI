@@ -49,7 +49,7 @@ export function AiHeroSection() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up">
               <a href="#aidetect" className="w-full sm:w-auto">
-                <Button variant="hero" size="xl" className="w-full sm:w-auto group whitespace-normal text-center h-auto min-h-14 py-3">
+                <Button variant="hero" size="xl" className="w-full sm:min-w-[220px] sm:w-auto sm:justify-center group text-center h-auto min-h-14 py-3">
                   <Search className="w-5 h-5" />
                   Analyze for AI
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -59,7 +59,7 @@ export function AiHeroSection() {
               <Button
                 variant="hero-outline"
                 size="xl"
-                className="w-full sm:w-auto whitespace-normal text-center h-auto min-h-14 py-3"
+                className="w-full sm:min-w-[220px] sm:w-auto sm:justify-center text-center h-auto min-h-14 py-3"
                 onClick={() => navigate("/")}
               >
                 <BookOpen className="w-5 h-5" />
@@ -68,13 +68,11 @@ export function AiHeroSection() {
               <Button
                 variant="hero-outline"
                 size="xl"
-                className="relative w-full sm:w-auto whitespace-normal text-center h-auto min-h-14 py-3"
+                className="w-full sm:min-w-[260px] sm:w-auto sm:justify-center text-center h-auto min-h-14 py-3"
                 onClick={() => navigate("/cross-verify")}
               >
                 Try Our New Source Verification Model
-
-                {/* NEW badge */}
-                <span className="absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-md">
+                <span className="ml-1 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-sm">
                   NEW
                 </span>
               </Button>
