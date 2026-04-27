@@ -49,7 +49,7 @@ export function AiHeroSection() {
             {/* CTA Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in-up max-w-5xl">
               <a href="#aidetect" className="w-full">
-                <Button variant="hero" size="xl" className="w-full group text-center h-auto min-h-14 py-3 px-5 whitespace-normal leading-snug">
+                <Button variant="hero" size="lg" className="w-full h-12 px-6 group text-center whitespace-nowrap text-sm">
                   <Search className="w-5 h-5" />
                   Analyze for AI
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -58,8 +58,8 @@ export function AiHeroSection() {
 
               <Button
                 variant="hero-outline"
-                size="xl"
-                className="w-full text-center h-auto min-h-14 py-3 px-5 whitespace-normal leading-snug"
+                size="lg"
+                className="w-full h-12 px-6 text-center whitespace-nowrap text-sm"
                 onClick={() => navigate("/")}
               >
                 <BookOpen className="w-5 h-5" />
@@ -67,8 +67,8 @@ export function AiHeroSection() {
               </Button>
               <Button
                 variant="hero-outline"
-                size="xl"
-                className="w-full text-center h-auto min-h-14 py-3 px-5 whitespace-normal leading-snug"
+                size="lg"
+                className="w-full h-12 px-4 text-center whitespace-nowrap text-sm"
                 onClick={() => navigate("/cross-verify")}
               >
                 Try Our New Source Verification Model
