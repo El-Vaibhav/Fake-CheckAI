@@ -75,11 +75,11 @@ export function ChartCard({ title, children, loading, dataUrl }: ChartCardProps)
 
   return (
     <Card className="rounded-2xl border-border/60 shadow-sm bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold">{title}</CardTitle>
       </CardHeader>
 
-      <CardContent className="h-[300px] bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70">
+      <CardContent className="h-[240px] sm:h-[300px] p-3 sm:p-6 bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70">
 
         {/* Loading */}
         {isLoading && (
