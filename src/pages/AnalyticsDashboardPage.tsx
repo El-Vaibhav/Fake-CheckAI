@@ -55,6 +55,13 @@ export default function AnalyticsDashboardPage() {
   const [dateFilter, setDateFilter] = useState("30days");
   const [typeFilter, setTypeFilter] = useState("both");
   const [sourceData, setSourceData] = useState([]);
+  const [loadingState, setLoadingState] = useState({
+    source: true,
+    exports: true,
+    chart: true,
+    table: true,
+    metrics: true,
+  });
 
   const [metricsData, setMetricsData] = useState({
     total: 0,
@@ -74,14 +81,16 @@ export default function AnalyticsDashboardPage() {
     fetch(`${import.meta.env.VITE_API_BASE_URL}/source-wise-stats`)
       .then(res => res.json())
       .then(data => setSourceData(data))
-      .catch(err => console.error(err));
+      .catch(err => console.error(err))
+      .finally(() => setLoadingState((prev) => ({ ...prev, source: false })));
   }, []);
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_BASE_URL}/exports`)
       .then(res => res.json())
       .then(data => setExports(data))
-      .catch(err => console.error("Export fetch error:", err));
+      .catch(err => console.error("Export fetch error:", err))
+      .finally(() => setLoadingState((prev) => ({ ...prev, exports: false })));
   }, []);
 
   useEffect(() => {
@@ -98,7 +107,8 @@ export default function AnalyticsDashboardPage() {
 
         setChartData(formatted);
       })
-      .catch(err => console.error("Chart error:", err));
+      .catch(err => console.error("Chart error:", err))
+      .finally(() => setLoadingState((prev) => ({ ...prev, chart: false })));
   }, []);
 
   useEffect(() => {
@@ -156,7 +166,8 @@ export default function AnalyticsDashboardPage() {
 
         setData(formatted);
       })
-      .catch(err => console.error("Error fetching table data:", err));
+      .catch(err => console.error("Error fetching table data:", err))
+      .finally(() => setLoadingState((prev) => ({ ...prev, table: false })));
   }, []);
 
   useEffect(() => {
@@ -181,7 +192,8 @@ export default function AnalyticsDashboardPage() {
 
         setMetricsData(normalized);
       })
-      .catch(err => console.error("Metrics error:", err));
+      .catch(err => console.error("Metrics error:", err))
+      .finally(() => setLoadingState((prev) => ({ ...prev, metrics: false })));
   }, []);
 
   const metrics = useMemo(() => {
@@ -237,6 +249,8 @@ export default function AnalyticsDashboardPage() {
     return trendData;
   }, [trendMode]);
 
+  const isDashboardLoading = Object.values(loadingState).some(Boolean);
+
   const realPieData = [
     { name: "Real News", value: metricsData.real },
     { name: "Fake News", value: metricsData.fake },
@@ -252,6 +266,12 @@ export default function AnalyticsDashboardPage() {
       typeFilter={typeFilter}
       setTypeFilter={setTypeFilter}
     >
+
+      {isDashboardLoading && (
+        <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+          Please wait for a few seconds while data is being fetched.
+        </div>
+      )}
 
       <div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <MetricCard title="Total Scans" value={`${metrics.total}`} trend="+12.4%" icon={Activity} />
