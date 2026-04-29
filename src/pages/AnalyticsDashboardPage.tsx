@@ -54,7 +54,7 @@ export default function AnalyticsDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("30days");
   const [typeFilter, setTypeFilter] = useState("both");
-  const [sourceData, setSourceData] = useState([]);
+  const [sourceData, setSourceData] = useState<{ name: string; value: number }[]>([]);
   const [loadingState, setLoadingState] = useState({
     source: true,
     exports: true,
@@ -196,27 +196,27 @@ export default function AnalyticsDashboardPage() {
       .finally(() => setLoadingState((prev) => ({ ...prev, metrics: false })));
   }, []);
 
-  const metrics = useMemo(() => {
-    const total = metricsData.total;
-    const fake = metricsData.fake;
-    const ai = metricsData.ai_generated;
-    const real = metricsData.real;
-    const human = metricsData.human_written;
-    const accuracy = metricsData.accuracy;
-    const exported = metricsData.exported;
+  const filteredData = useMemo(() => {
+    if (typeFilter === "fake") return data.filter((r) => r.type === "fake" || r.type === "real");
+    if (typeFilter === "ai") return data.filter((r) => r.type === "ai" || r.type === "human");
+    return data;
+  }, [data, typeFilter]);
 
-    // Prefer server-provided scoped percentages (fake_pct from analysis_logs, ai_pct from ai_detection_logs)
-    const fakePct = typeof metricsData.fake_pct === "number" ? metricsData.fake_pct : (metricsData.analysis_count > 0 ? Math.round((fake / metricsData.analysis_count) * 100) : 0);
-    const aiPct = typeof metricsData.ai_pct === "number" ? metricsData.ai_pct : (metricsData.ai_count > 0 ? Math.round((ai / metricsData.ai_count) * 100) : 0);
+  const metrics = useMemo(() => {
+    const total = filteredData.length;
+    const fakeCount = filteredData.filter((r) => r.type === "fake").length;
+    const aiCount = filteredData.filter((r) => r.type === "ai").length;
+    const analysisCount = filteredData.filter((r) => r.type === "fake" || r.type === "real").length;
+    const aiDetectionCount = filteredData.filter((r) => r.type === "ai" || r.type === "human").length;
 
     return {
       total,
-      fakePct,
-      aiPct,
+      fakePct: analysisCount > 0 ? Math.round((fakeCount / analysisCount) * 100) : 0,
+      aiPct: aiDetectionCount > 0 ? Math.round((aiCount / aiDetectionCount) * 100) : 0,
       accuracy: metricsData.accuracy || 0,
       exported: metricsData.exported || 0
     };
-  }, [metricsData]);
+  }, [filteredData, metricsData.accuracy, metricsData.exported]);
 
   const handleCompare = (report: Report) => {
     setCompareList((prev) => {
@@ -251,11 +251,53 @@ export default function AnalyticsDashboardPage() {
 
   const isDashboardLoading = Object.values(loadingState).some(Boolean);
 
-  const realPieData = [
-    { name: "Real News", value: metricsData.real },
-    { name: "Fake News", value: metricsData.fake },
-    { name: "AI Generated", value: metricsData.ai_generated },
-  ];
+  const realPieData = useMemo(() => {
+    const realCount = filteredData.filter((r) => r.type === "real").length;
+    const fakeCount = filteredData.filter((r) => r.type === "fake").length;
+    const aiCount = filteredData.filter((r) => r.type === "ai").length;
+
+    if (typeFilter === "fake") {
+      return [
+        { name: "Real News", value: realCount },
+        { name: "Fake News", value: fakeCount },
+      ];
+    }
+
+    if (typeFilter === "ai") {
+      return [
+        { name: "AI Generated", value: aiCount },
+      ];
+    }
+
+    return [
+      { name: "Real News", value: realCount },
+      { name: "Fake News", value: fakeCount },
+      { name: "AI Generated", value: aiCount },
+    ];
+  }, [filteredData, typeFilter]);
+
+  const displayedSourceData = useMemo(() => {
+    if (typeFilter === "both") return sourceData;
+    const counts: Record<string, number> = {};
+    filteredData.forEach((r) => {
+      counts[r.source] = (counts[r.source] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [filteredData, sourceData, typeFilter]);
+
+  const displayedTrendData = useMemo(() => {
+    if (typeFilter === "both") return chartData;
+
+    const buckets: Record<string, { time: string; fake: number; ai: number }> = {};
+    filteredData.forEach((r) => {
+      const time = r.date.split(",")[0]?.trim() || r.date;
+      if (!buckets[time]) buckets[time] = { time, fake: 0, ai: 0 };
+      if (r.type === "fake") buckets[time].fake += 1;
+      if (r.type === "ai") buckets[time].ai += 1;
+    });
+
+    return Object.values(buckets);
+  }, [filteredData, chartData, typeFilter]);
 
   return (
     <DashboardLayout
@@ -300,7 +342,7 @@ export default function AnalyticsDashboardPage() {
                 </div>
 
                 <ResponsiveContainer width="100%" height="85%">
-                  <LineChart data={data}>
+                  <LineChart data={typeFilter === "both" ? data : displayedTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
 
                     <XAxis dataKey="time" />
@@ -383,7 +425,7 @@ export default function AnalyticsDashboardPage() {
 
               {/* Chart */}
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sourceData}>
+                <BarChart data={displayedSourceData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis allowDecimals={false} />
@@ -403,7 +445,7 @@ export default function AnalyticsDashboardPage() {
 
       <div className="animate-fade-in-up animation-delay-300">
         <DataTable
-          reports={data}
+          reports={filteredData}
           externalSearchQuery={searchQuery}
           onView={(r) => setSelectedReport(r)}
           onCompare={handleCompare}
