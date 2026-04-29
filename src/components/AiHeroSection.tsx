@@ -1,4 +1,4 @@
-import { ArrowRight, Search, BookOpen, Shield, Zap, Cpu } from "lucide-react";
+import { ArrowRight, Search, BookOpen, Shield, Zap, Cpu, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -72,14 +72,21 @@ export function AiHeroSection() {
                 onClick={() => navigate("/cross-verify")}
               >
                 Try Our New Source Verification Model
-                <span className="ml-1 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-sm">
+
+                {/* NEW badge */}
+                <span className="absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-md">
                   NEW
                 </span>
               </Button>
+              <Button
+                variant="hero-outline"
+                size="xl"
+                className="relative"
+                onClick={() => navigate("/image-detector")}
+              >
+              </Button>
             </div>
-
-
-
+            
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 pt-8 animate-fade-in-up">
               {[

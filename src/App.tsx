@@ -6,8 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import Index from "./pages/Index";
 import AiDetectorPage from "./pages/AiDetectorPage";
-import CrossVerifyPage from "./pages/CrossVerifyPage"
+import CrossVerifyPage from "./pages/CrossVerifyPage";
 import NotFound from "./pages/NotFound";
+import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="/ai-detector" element={<AiDetectorPage />} />
           <Route path="/cross-verify" element={<CrossVerifyPage />} />
+          <Route path="/dashboard" element={<AnalyticsDashboardPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

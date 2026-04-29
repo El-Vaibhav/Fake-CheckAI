@@ -84,6 +84,14 @@ export function HeroSection() {
                   NEW
                 </span>
               </Button>
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate("/dashboard")}
+              >
+                Open Analytics Dashboard
+              </Button>
 
             </div>
 
