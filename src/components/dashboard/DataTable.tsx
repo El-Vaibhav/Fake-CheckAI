@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,18 +11,33 @@ import { Report } from "@/data/dashboardMock";
 
 interface Props {
   reports: Report[];
+  externalSearchQuery?: string;
   onView: (report: Report) => void;
   onCompare: (report: Report) => void;
   onToggleFavorite: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export function DataTable({ reports, onView, onCompare, onToggleFavorite, onDelete }: Props) {
+export function DataTable({ reports, externalSearchQuery = "", onView, onCompare, onToggleFavorite, onDelete }: Props) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"date" | "confidence">("date");
   const [page, setPage] = useState(1);
   const pageSize = 5;
+
+  const tableRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setQuery(externalSearchQuery);
+
+    const trimmed = externalSearchQuery.trim();
+    if (!trimmed) return;
+
+    const hasMatch = reports.some((r) => [r.title, r.source, r.id].join(" ").toLowerCase().includes(trimmed.toLowerCase()));
+    if (hasMatch) {
+      tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [externalSearchQuery, reports]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -37,6 +52,22 @@ export function DataTable({ reports, onView, onCompare, onToggleFavorite, onDele
   }, [reports, query, typeFilter, sortBy]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const highlightedRowId = normalizedQuery
+    ? filtered.find((r) => [r.title, r.source, r.id].join(" ").toLowerCase().includes(normalizedQuery))?.id
+    : null;
+
+  const highlightedIndex = highlightedRowId ? filtered.findIndex((r) => r.id === highlightedRowId) : -1;
+
+  useEffect(() => {
+    if (highlightedIndex >= 0) {
+      setPage(Math.floor(highlightedIndex / pageSize) + 1);
+    } else {
+      setPage(1);
+    }
+  }, [highlightedIndex]);
+
   const sliced = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const badgeVariant = (type: Report["type"]) => {
@@ -48,7 +79,7 @@ export function DataTable({ reports, onView, onCompare, onToggleFavorite, onDele
   };
 
   return (
-    <Card className="rounded-2xl border-primary/15 shadow-sm bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 animate-fade-in-up">
+    <Card ref={tableRef} className="rounded-2xl border-primary/15 shadow-sm bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 animate-fade-in-up">
       <CardHeader className="space-y-4">
         <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
           <CardTitle>Scan History</CardTitle>
@@ -91,7 +122,7 @@ export function DataTable({ reports, onView, onCompare, onToggleFavorite, onDele
               </TableHeader>
               <TableBody>
                 {sliced.map((row) => (
-                  <TableRow key={row.id} className="bg-gradient-to-r from-cyan-50/30 to-purple-50/30 hover:bg-primary/5 transition-all duration-300">
+                  <TableRow key={row.id} className={`bg-gradient-to-r from-cyan-50/30 to-purple-50/30 hover:bg-primary/5 transition-all duration-300 ${row.id === highlightedRowId ? "ring-2 ring-primary/60 bg-primary/10" : ""}`}>
                     <TableCell className="min-w-72">
                       <p className="font-medium line-clamp-1">{row.title}</p>
                       <p className="text-xs text-muted-foreground">{row.id}</p>
