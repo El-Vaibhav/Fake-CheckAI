@@ -480,10 +480,10 @@ export default function AnalyticsDashboardPage() {
           {savedExports.map((item) => (
             <div
               key={item.id}
-              className="border rounded-xl p-3 bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 flex flex-col sm:flex-row sm:items-center gap-2 justify-between"
+              className="border rounded-xl p-3 bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 flex flex-col sm:flex-row sm:items-center gap-2 justify-between overflow-hidden"
             >
-              <div>
-                <p className="font-medium">
+              <div className="min-w-0">
+                <p className="font-medium break-words">
                   {(
                     item.text
                       ?.slice(0, 50)
@@ -497,7 +497,7 @@ export default function AnalyticsDashboardPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge className="uppercase">{item.type}</Badge>
 
                 <Button
