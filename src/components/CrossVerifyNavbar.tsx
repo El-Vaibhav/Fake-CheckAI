@@ -8,6 +8,7 @@ const navItems = [
   { name: "Verify", href: "#cross-workspace" },
   { name: "How It Works", href: "#how-it-works" },
   { name: "About", href: "#about" },
+  { name: "Dashboard", href: "dashboard" },
 ];
 
 export function CrossVerifyNavbar() {

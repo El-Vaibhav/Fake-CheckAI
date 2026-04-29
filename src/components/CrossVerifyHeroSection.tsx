@@ -56,9 +56,15 @@ export function CrossVerifyHeroSection() {
             </p>
 
             {/* CTA */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in-up max-w-4xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in-up max-w-4xl w-full">
+
+              {/* Row 1 */}
               <a href="#cross-workspace" className="w-full">
-                <Button variant="hero" size="lg" className="w-full min-h-12 px-5 py-3 group text-center whitespace-normal leading-snug text-base">
+                <Button
+                  variant="hero"
+                  size="lg"
+                  className="w-full min-h-12 px-5 py-3 flex items-center justify-center gap-2 text-center"
+                >
                   <Search className="w-5 h-5" />
                   Start Cross Verification
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -66,25 +72,35 @@ export function CrossVerifyHeroSection() {
               </a>
 
               <Button
+                variant="hero"
+                size="lg"
+                className="w-full min-h-12 px-5 py-3 flex items-center justify-center text-center"
+                onClick={() => navigate("/dashboard")}
+              >
+                Open Analytics Dashboard
+              </Button>
+
+              {/* Row 2 */}
+              <Button
                 variant="hero-outline"
                 size="lg"
-                className="w-full min-h-12 px-5 py-3 text-center whitespace-normal leading-snug text-base"
+                className="w-full min-h-12 px-5 py-3 flex items-center justify-center gap-2 text-center"
                 onClick={() => navigate("/")}
               >
                 <Layers className="w-5 h-5" />
                 Back to Fake News Detector
               </Button>
-              
+
               <Button
                 variant="hero"
                 size="lg"
-                className="w-full sm:col-span-2 min-h-12 px-5 py-3 text-center whitespace-normal leading-snug text-base"
+                className="w-full min-h-12 px-5 py-3 flex items-center justify-center text-center"
                 onClick={() => navigate("/ai-detector")}
               >
                 Try Our AI Detector
               </Button>
-            </div>
 
+            </div>
 
             {/* Mini Metrics Row */}
             <div className="flex flex-wrap gap-4 pt-6 justify-center lg:justify-start">

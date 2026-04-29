@@ -56,13 +56,14 @@ export function HeroSection() {
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </a>
-
-              <a href="#how-it-works" className="w-full">
-                <Button variant="hero-outline" size="lg" className="w-full min-h-14 py-3 text-center whitespace-normal leading-snug">
-                  <BookOpen className="w-5 h-5" />
-                  Learn How It Works
-                </Button>
-              </a>
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() => navigate("/dashboard")}
+              >
+                Open Analytics Dashboard
+              </Button>
 
               <Button
                 variant="hero"
@@ -79,20 +80,11 @@ export function HeroSection() {
                 className="w-full min-h-14 py-3 text-center whitespace-normal leading-snug"
                 onClick={() => navigate("/cross-verify")}
               >
-                Try Our New Source Verification Model
+                Try Our Latest Source Verification Model
                 <span className="ml-1 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-sm">
                   NEW
                 </span>
               </Button>
-              <Button
-                variant="hero"
-                size="lg"
-                className="w-full sm:w-auto"
-                onClick={() => navigate("/dashboard")}
-              >
-                Open Analytics Dashboard
-              </Button>
-
             </div>
 
 

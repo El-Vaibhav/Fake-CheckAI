@@ -47,9 +47,15 @@ export function AiHeroSection() {
             </p>
 
             {/* CTA Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in-up max-w-4xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in-up max-w-4xl w-full">
+
+              {/* Row 1 */}
               <a href="#aidetect" className="w-full">
-                <Button variant="hero" size="lg" className="w-full min-h-12 px-5 py-3 group text-center whitespace-normal leading-snug text-base">
+                <Button
+                  variant="hero"
+                  size="lg"
+                  className="w-full min-h-12 px-5 py-3 flex items-center justify-center gap-2 text-center"
+                >
                   <Search className="w-5 h-5" />
                   Analyze for AI
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -57,36 +63,42 @@ export function AiHeroSection() {
               </a>
 
               <Button
+                variant="hero"
+                size="lg"
+                className="w-full min-h-12 px-5 py-3 flex items-center justify-center text-center"
+                onClick={() => navigate("/dashboard")}
+              >
+                Open Analytics Dashboard
+              </Button>
+
+              {/* Row 2 */}
+              <Button
                 variant="hero-outline"
                 size="lg"
-                className="w-full min-h-12 px-5 py-3 text-center whitespace-normal leading-snug text-base"
+                className="w-full min-h-12 px-5 py-3 flex items-center justify-center gap-2 text-center"
                 onClick={() => navigate("/")}
               >
                 <BookOpen className="w-5 h-5" />
                 Back to Fake News Detector
               </Button>
+
+              {/* FIXED NEW SOURCE BUTTON */}
               <Button
                 variant="hero-outline"
                 size="lg"
-                className="w-full sm:col-span-2 min-h-12 px-5 py-3 text-center whitespace-normal leading-snug text-base"
+                className="relative w-full min-h-12 px-5 py-3 flex items-center justify-center text-center"
                 onClick={() => navigate("/cross-verify")}
               >
-                Try Our New Source Verification Model
+                <span>Try Our New Source Verification Model</span>
 
                 {/* NEW badge */}
-                <span className="absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-md">
+                <span className="absolute -top-4 -right-4 px-2 py-0.5 text-[10px] font-semibold bg-green-500 text-white rounded-full shadow-md">
                   NEW
                 </span>
               </Button>
-              <Button
-                variant="hero-outline"
-                size="xl"
-                className="relative"
-                onClick={() => navigate("/image-detector")}
-              >
-              </Button>
+
             </div>
-            
+
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 pt-8 animate-fade-in-up">
               {[

@@ -2,7 +2,92 @@ from ddgs import DDGS
 from bs4 import BeautifulSoup
 from readability import Document
 import requests
+from urllib.parse import urlparse
 
+from urllib.parse import urlparse
+
+def classify_source(url):
+    domain = urlparse(url).netloc.lower().replace("www.", "")
+
+    # =========================
+    # SOCIAL MEDIA 
+    # =========================
+    SOCIAL_DOMAINS = [
+        "twitter.com", "x.com",
+        "linkedin.com",
+        "facebook.com", "fb.com",
+        "instagram.com",
+        "reddit.com",
+        "youtube.com", "youtu.be",
+        "tiktok.com"
+    ]
+
+    if any(domain.endswith(d) or d in domain for d in SOCIAL_DOMAINS):
+        if "reddit" in domain:
+            return "Reddit"
+        elif "twitter" in domain or "x.com" in domain:
+            return "Twitter"
+        else:
+            return "Social"
+
+    # =========================
+    # NEWS DOMAINS (STRICT MATCH)
+    # =========================
+    NEWS_DOMAINS = [
+        "bbc.com", "bbc.co.uk",
+        "cnn.com",
+        "reuters.com",
+        "apnews.com",
+        "nytimes.com",
+        "washingtonpost.com",
+        "theguardian.com",
+        "forbes.com",
+        "bloomberg.com",
+        "wsj.com",
+        "nbcnews.com",
+        "abc.net.au",
+        "abcnews.go.com",
+        "cbsnews.com",
+        "aljazeera.com",
+        "usatoday.com",
+        "people.com",
+        "9news.com.au",
+        "adelaidenow.com.au",
+
+        # INDIA
+        "ndtv.com",
+        "timesofindia.com",
+        "hindustantimes.com",
+        "indiatoday.in",
+        "news18.com",
+        "thehindu.com",
+        "indianexpress.com",
+        "dnaindia.com",
+        "firstpost.com",
+        "zeenews.india.com"
+    ]
+
+    if any(domain.endswith(d) or d in domain for d in NEWS_DOMAINS):
+        return "News"
+
+    # =========================
+    # BLOG / CONTENT
+    # =========================
+    BLOG_DOMAINS = [
+        "medium.com",
+        "blogspot.com",
+        "wordpress.com",
+        "substack.com",
+        "quora.com"
+    ]
+
+    if any(domain.endswith(d) or d in domain for d in BLOG_DOMAINS):
+        return "Blogs"
+
+    # =========================
+    # DEFAULT (SAFE)
+    # =========================
+    return "News"
 
 def search_duckduckgo(query, max_results=8):
     results_list = []
@@ -95,12 +180,14 @@ def check_web_similarity(user_text):
         if overall_score > highest_score:
             highest_score = overall_score
 
+        source_type = classify_source(url)
+
         report.append({
-            "title": title,
-            "url": url,
-            "similarity": overall_score,
-            "matched_sentences": sentence_matches[:3]
-        })
+    "title": title,
+    "url": url,
+    "similarity": overall_score,
+    "source_type": source_type,
+    "matched_sentences": sentence_matches[:3] })
 
     # Sort by similarity
     report = sorted(report, key=lambda x: x["similarity"], reverse=True)

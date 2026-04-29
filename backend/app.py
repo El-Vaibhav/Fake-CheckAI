@@ -21,7 +21,7 @@ from pdf2image import convert_from_bytes
 from io import BytesIO
 
 # PDF extraction 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
@@ -38,6 +38,18 @@ import io
 import nltk
 import os
 from web_checker import check_web_similarity
+
+# DB connection
+import psycopg2
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
 
 # Create persistent nltk directory
 nltk_data_dir = os.path.join(os.getcwd(), "nltk_data")
@@ -70,8 +82,13 @@ tfidf = bundle["tfidf"]
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
 
+from collections import Counter
+
 @app.route("/cross-verify", methods=["POST"])
 def cross_verify():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     data = request.json
     user_text = data.get("text")
@@ -80,12 +97,140 @@ def cross_verify():
         return jsonify({"error": "Invalid or empty text"}), 400
 
     try:
+        # 🔥 run similarity check
         result = check_web_similarity(user_text)
+
+        highest_similarity = result.get("highest_similarity", 0)
+        risk_level = result.get("risk_level", "Unknown")
+
+        sources = result.get("sources", [])
+        total_sources = len(sources)
+
+        # =========================
+        # ✅ PICK TOP MATCH SOURCE
+        # =========================
+        if sources:
+            selected_source = sources[0].get("source_type", "Blogs")
+        else:
+            selected_source = "Unknown"
+
+        # =========================
+        # ✅ INSERT INTO DATABASE
+        # =========================
+        cursor.execute("""
+            INSERT INTO cross_verify_logs 
+            (input_text, highest_similarity, risk_level, total_sources, source_type, created_at)
+            VALUES (%s, %s, %s, %s, %s, NOW() AT TIME ZONE 'Asia/Kolkata')
+        """, (
+            user_text,
+            highest_similarity,
+            risk_level,
+            total_sources,
+            selected_source
+        ))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
         return jsonify(result)
 
     except Exception as e:
         print("ERROR:", e)
         return jsonify({"error": "Internal server error"}), 500
+    
+@app.route("/source-wise-stats", methods=["GET"])
+def source_wise_stats():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT source_type, COUNT(*)
+        FROM cross_verify_logs
+        GROUP BY source_type
+    """)
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    data = {
+        "Twitter": 0,
+        "Reddit": 0,
+        "News": 0,
+        "Blogs": 0,
+        "Social": 0
+    }
+
+    for r in rows:
+        if r[0] in data:
+            data[r[0]] = r[1]
+
+    return jsonify([
+        {"name": k, "value": v} for k, v in data.items()
+    ])
+
+@app.route("/cross-verify-stats", methods=["GET"])
+def cross_verify_stats():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT risk_level, COUNT(*) 
+        FROM cross_verify_logs
+        GROUP BY risk_level
+    """)
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    data = {
+        "Low": 0,
+        "Moderate": 0,
+        "High": 0
+    }
+
+    for r in rows:
+        data[r[0]] = r[1]
+
+    return jsonify([
+        {"name": "Low Risk", "value": data["Low"]},
+        {"name": "Moderate Risk", "value": data["Moderate"]},
+        {"name": "High Risk", "value": data["High"]}
+    ])
+
+@app.route("/cross-stats", methods=["GET"])
+def cross_stats():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT risk_level, COUNT(*)
+        FROM cross_verify_logs
+        GROUP BY risk_level
+    """)
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    data = {
+        "Low": 0,
+        "Moderate": 0,
+        "High": 0
+    }
+
+    for r in rows:
+        data[r[0]] = r[1]
+
+    return jsonify(data)
     
 #pdf generation 
 def generate_pdf(report_data):
@@ -95,88 +240,103 @@ def generate_pdf(report_data):
 
     styles = getSampleStyleSheet()
 
-    # Custom Styles
-    prediction_style = ParagraphStyle(
-        'PredictionStyle',
+    # 🎨 CUSTOM STYLES
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Heading1'],
+        textColor=colors.HexColor("#1e3a8a"),
+        alignment=1  # center
+    )
+
+    section_title = ParagraphStyle(
+        'SectionTitle',
         parent=styles['Heading2'],
-        textColor=colors.green if report_data['prediction'] == "REAL" else colors.red
+        textColor=colors.HexColor("#0ea5e9")
     )
 
-    score_style = ParagraphStyle(
-        'ScoreStyle',
-        parent=styles['Normal'],
-        textColor=colors.blue,
-        fontSize=12,
-    )
+    normal = styles["Normal"]
 
-    normal_style = styles["Normal"]
+    box_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#f1f5f9")),
+        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
+        ('INNERPADDING', (0, 0), (-1, -1), 8),
+    ])
 
-    # Title
-    elements.append(Paragraph("Fake News Analysis Report", styles["Heading1"]))
+    # 🎯 HEADER
+    elements.append(Paragraph("🧠 Fake News Analysis Report", title_style))
     elements.append(Spacer(1, 0.2 * inch))
 
-    # Timestamp
     now = datetime.now().strftime("%d %B %Y, %H:%M")
-    elements.append(Paragraph(f"Generated on: {now}", styles["Normal"]))
+    elements.append(Paragraph(f"<b>Generated:</b> {now}", normal))
     elements.append(Spacer(1, 0.3 * inch))
 
     elements.append(HRFlowable(width="100%", thickness=1, color=colors.grey))
     elements.append(Spacer(1, 0.3 * inch))
 
-    # Prediction (Colorful)
+    # 🎯 PREDICTION BADGE
+    pred_color = "#16a34a" if report_data["prediction"] == "REAL" else "#dc2626"
+
     elements.append(
-        Paragraph(f"Prediction: {report_data['prediction']}", prediction_style)
+        Paragraph(
+            f"<b>Prediction:</b> <font color='{pred_color}' size=14><b>{report_data['prediction']}</b></font>",
+            normal
+        )
     )
     elements.append(Spacer(1, 0.2 * inch))
 
-    # Confidence
-    elements.append(
-        Paragraph(f"Model Confidence: {report_data['confidence']}%", score_style)
-    )
-    elements.append(Spacer(1, 0.2 * inch))
+    # 📊 SCORE CARDS
+    score_table = Table([
+        ["Confidence", "Credibility Score"],
+        [
+            f"{report_data['confidence']}%",
+            f"{report_data['credibility_score']}/100"
+        ]
+    ])
 
-    # Credibility
-    elements.append(
-        Paragraph(f"Credibility Score: {report_data['credibility_score']}/100", score_style)
-    )
-    elements.append(Spacer(1, 0.3 * inch))
+    score_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#e0f2fe")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOX', (0, 0), (-1, -1), 1, colors.grey),
+        ('INNERPADDING', (0, 0), (-1, -1), 8),
+    ]))
 
-    elements.append(HRFlowable(width="100%", thickness=1, color=colors.grey))
-    elements.append(Spacer(1, 0.3 * inch))
-
-    # Article Section
-    elements.append(Paragraph("Submitted Article:", styles["Heading2"]))
-    elements.append(Spacer(1, 0.2 * inch))
-
-    article_preview = report_data.get("article_text", "")
-
-    # Limit text length for PDF cleanliness
-    if len(article_preview) > 1500:
-        article_preview = article_preview[:1500] + "..."
-
-    elements.append(Paragraph(article_preview.replace("\n", "<br/>"), normal_style))
+    elements.append(score_table)
     elements.append(Spacer(1, 0.4 * inch))
 
-    elements.append(HRFlowable(width="100%", thickness=1, color=colors.grey))
-    elements.append(Spacer(1, 0.3 * inch))
+    # 🧾 ARTICLE SECTION
+    elements.append(Paragraph("📝 Submitted Article", section_title))
+    elements.append(Spacer(1, 0.15 * inch))
 
-    # Reasons Section
-    elements.append(Paragraph("Analysis Explanation:", styles["Heading2"]))
+    article = report_data.get("article_text", "")
+    if len(article) > 1200:
+        article = article[:1200] + "..."
+
+    article_box = Table([[Paragraph(article.replace("\n", "<br/>"), normal)]])
+    article_box.setStyle(box_style)
+
+    elements.append(article_box)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # 💡 REASONS
+    elements.append(Paragraph("💡 Model Explanation", section_title))
     elements.append(Spacer(1, 0.2 * inch))
 
     for reason in report_data["reasons"]:
-        elements.append(Paragraph(f"• {reason}", normal_style))
-        elements.append(Spacer(1, 0.15 * inch))
+        elements.append(Paragraph(f"• {reason}", normal))
+        elements.append(Spacer(1, 0.12 * inch))
 
     elements.append(Spacer(1, 0.4 * inch))
 
-    # Footer
+    # ⚠️ FOOTER
     elements.append(HRFlowable(width="100%", thickness=1, color=colors.grey))
     elements.append(Spacer(1, 0.2 * inch))
+
     elements.append(
         Paragraph(
-            "This report is generated using probabilistic machine learning models and does not constitute factual verification.",
-            styles["Italic"],
+            "<i>This report is generated using machine learning and may not represent absolute truth.</i>",
+            styles["Italic"]
         )
     )
 
@@ -343,6 +503,9 @@ def extract_pdf():
 # ----------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
     data = request.get_json()
     text = data.get("text", "")
 
@@ -362,12 +525,26 @@ def predict():
     prediction = model.predict(X_final)[0]
     confidence = model.predict_proba(X_final).max()
 
+    prediction_label = "Fake" if prediction == 0 else "Real"
+    confidence_val = float(confidence)
+
+    cursor.execute(
+    "INSERT INTO analysis_logs (input_text, prediction, confidence, created_at) VALUES (%s, %s, %s, NOW() AT TIME ZONE 'Asia/Kolkata')",
+    (text, prediction_label, confidence_val)
+)    
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    
     return jsonify({
-        "label": "Fake" if prediction == 0 else "Real",
-        "confidence": round(float(confidence), 3),
-        "word_count": word_count,
-        "sentiment": round(float(sentiment), 3)
-    })
+    "label": prediction_label,
+    "confidence": round(confidence_val, 3),
+    "word_count": word_count,
+    "sentiment": round(float(sentiment), 3)
+})
+
+    
 
 # ----------------------------
 # GNEWS SEARCH API
@@ -553,6 +730,9 @@ def extract_stylometric_features(cleaned):
 @app.route("/ai-detect", methods=["POST"])
 def ai_detect():
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
     data = request.get_json()
     text = data.get("text", "")
 
@@ -561,30 +741,48 @@ def ai_detect():
 
     cleaned = text.lower()
 
-    # TF-IDF
+    # TF-IDF features
     tfidf_features = ai_tfidf.transform([cleaned])
 
-    # Stylometric Features
+    # Stylometric features
     stylometric = extract_stylometric_features(cleaned)
-
     stylometric_scaled = ai_scaler.transform(stylometric)
 
+    # Combine features
     final_input = hstack([tfidf_features, stylometric_scaled])
 
+    # Prediction
     prediction = ai_model.predict(final_input)[0]
     probabilities = ai_model.predict_proba(final_input)[0]
 
     ai_prob = float(probabilities[1])
     human_prob = float(probabilities[0])
 
+    # Confidence (correct placement)
     confidence = round(max(ai_prob, human_prob) * 100, 2)
 
+    result_label = "AI Generated" if prediction == 1 else "Human Written"
+
+    try:
+        cursor.execute(
+    "INSERT INTO ai_detection_logs (input_text, result, confidence, created_at) VALUES (%s, %s, %s, NOW() AT TIME ZONE 'Asia/Kolkata')",
+    (text, result_label, confidence)
+)
+        conn.commit()
+    except Exception as e:
+        print("DB Error:", e)
+    
+
+    cursor.close()
+    conn.close()
+
     return jsonify({
-        "prediction": "AI Generated" if prediction == 1 else "Human Written",
+        "prediction": result_label,
         "ai_probability": round(ai_prob * 100, 2),
         "human_probability": round(human_prob * 100, 2),
         "confidence": confidence
     })
+    
 
 # ----------------------------
 # Reusable Prediction Function
@@ -720,6 +918,272 @@ def analyze_url():
         "extracted_text": article.text[:1500]
     })
 
+@app.route("/chart-data", methods=["GET"])
+def chart_data():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get analysis logs (fake/real)
+    cursor.execute("""
+        SELECT created_at, prediction
+        FROM analysis_logs
+        ORDER BY created_at ASC
+    """)
+    analysis_rows = cursor.fetchall()
+
+    # Get AI logs
+    cursor.execute("""
+        SELECT created_at, result
+        FROM ai_detection_logs
+        ORDER BY created_at ASC
+    """)
+    ai_rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    data = []
+
+    # merge both logs
+    combined = []
+
+    for row in analysis_rows:
+        combined.append({
+            "time": row[0],
+            "fake": 1 if row[1] == "Fake" else 0,
+            "real": 1 if row[1] == "Real" else 0,
+            "ai": 0
+        })
+
+    for row in ai_rows:
+        combined.append({
+            "time": row[0],
+            "fake": 0,
+            "real": 0,
+            "ai": 1 if row[1] == "AI Generated" else 0
+        })
+
+    # sort by time
+    combined.sort(key=lambda x: x["time"])
+
+    fake_count = 0
+    ai_count = 0
+
+    for item in combined:
+        fake_count += item["fake"]
+        ai_count += item["ai"]
+
+        data.append({
+            "time": item["time"].isoformat(),
+            "fake": fake_count,
+            "ai": ai_count
+        })
+
+    return jsonify(data)
+
+@app.route("/table-data", methods=["GET"])
+def table_data():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Fake / Real (analysis_logs)
+    # analysis_logs
+    cursor.execute("""
+    SELECT id, input_text, prediction, confidence, created_at
+    FROM analysis_logs
+""")
+    analysis_rows = cursor.fetchall() 
+    # ai_detection_logs
+    cursor.execute("""
+    SELECT id, input_text, result, confidence, created_at
+    FROM ai_detection_logs
+""")
+    ai_rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    combined = []
+
+    # Add analysis logs
+    for r in analysis_rows:
+        combined.append({
+            "id": r[0],
+            "text": r[1],
+            "type": r[2],  # Fake / Real
+            "confidence": r[3],
+            "date": r[4]
+        })
+
+    # Add AI logs
+    for r in ai_rows:
+        combined.append({
+            "id": r[0],
+            "text": r[1],
+            "type": r[2],  # AI Generated / Human Written
+            "confidence": r[3],
+            "date": r[4]
+        })
+
+    # Sort by latest
+    combined.sort(key=lambda x: x["date"], reverse=True)
+
+    return jsonify([
+        {
+            "id": item["id"],
+            "text": item["text"],
+            "type": item["type"],
+            "confidence": item["confidence"],
+            "date": item["date"].isoformat()
+        }
+        for item in combined[:50]
+    ])
+
+@app.route("/metrics", methods=["GET"])
+def get_metrics():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # counts
+    cursor.execute("SELECT COUNT(*) FROM analysis_logs")
+    analysis_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs")
+    ai_count = cursor.fetchone()[0]
+
+    total = analysis_count + ai_count
+
+    # fake / real
+    cursor.execute("SELECT COUNT(*) FROM analysis_logs WHERE prediction='Fake'")
+    fake = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM analysis_logs WHERE prediction='Real'")
+    real = cursor.fetchone()[0]
+
+    # AI stats
+    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs WHERE result='AI Generated'")
+    ai_generated = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs WHERE result='Human Written'")
+    human_written = cursor.fetchone()[0]
+
+    # accuracy
+    cursor.execute("SELECT AVG(confidence) FROM analysis_logs")
+    analysis_avg = cursor.fetchone()[0] or 0
+
+    cursor.execute("SELECT AVG(confidence) FROM ai_detection_logs")
+    ai_avg = cursor.fetchone()[0] or 0
+
+    total_count = analysis_count + ai_count
+
+    avg_accuracy = (
+        ((analysis_avg * analysis_count) + (ai_avg * ai_count)) / total_count
+        if total_count > 0 else 0
+    )
+
+    cursor.execute("SELECT COUNT(*) FROM exported_reports")
+    exported = cursor.fetchone()[0]
+
+    cursor.close()
+    conn.close()
+
+    fake_pct = round((fake / analysis_count) * 100, 2) if analysis_count else 0
+    ai_pct = round((ai_generated / ai_count) * 100, 2) if ai_count else 0
+
+
+
+    return jsonify({
+        "total": total,
+        "analysis_count": analysis_count,
+        "ai_count": ai_count,
+        "fake": fake,
+        "real": real,
+        "ai_generated": ai_generated,
+        "human_written": human_written,
+        "fake_pct": fake_pct,
+        "ai_pct": ai_pct,
+        "accuracy": round(avg_accuracy, 2),
+        "exported": exported
+    })
+
+@app.route("/exports", methods=["GET"])
+def get_exports():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT e.id, e.report_id, e.type, e.created_at, a.input_text
+        FROM exported_reports e
+        JOIN analysis_logs a ON e.report_id = a.id
+        ORDER BY e.created_at DESC
+    """)
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify([
+        {
+            "id": r[0],
+            "report_id": r[1],
+            "type": r[2],
+            "date": r[3].isoformat(),
+            "text": r[4][:120] if r[4] else "Report"
+        }
+        for r in rows
+    ])
+
+@app.route("/download-report/<int:id>")
+def download_report_by_id(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 🔥 Fetch data
+    cursor.execute(
+        "SELECT input_text, prediction, confidence FROM analysis_logs WHERE id=%s",
+        (id,)
+    )
+    row = cursor.fetchone()
+
+    if not row:
+        return "Not found", 404
+
+    text, prediction, confidence = row
+
+    # SAVE EXPORT
+    cursor.execute(
+    "INSERT INTO exported_reports (report_id, type) VALUES (%s, %s)",
+    (id, prediction) 
+    )
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    # Convert DB → report format (VERY IMPORTANT)
+    report_data = {
+        "prediction": prediction.upper(),
+        "confidence": round(float(confidence) * 100, 2) if confidence <= 1 else round(float(confidence), 2),
+        "credibility_score": 100 - int(float(confidence) * 100) if prediction == "Fake" else int(float(confidence) * 100),
+        "article_text": text,
+        "reasons": [
+            "Model detected linguistic patterns",
+            "Confidence based on training dataset",
+            "Cross-source verification may vary"
+        ]
+    }
+
+    # USE SAME PDF FUNCTION
+    pdf_buffer = generate_pdf(report_data)
+    safe_title = re.sub(r'[^\w\s-]', '', text).strip().replace(" ", "_")[:50]
+
+    return send_file(
+    pdf_buffer,
+    as_attachment=True,
+    download_name=f"{safe_title}.pdf",
+    mimetype="application/pdf"
+)
 # ----------------------------
 # Run server
 # ----------------------------
