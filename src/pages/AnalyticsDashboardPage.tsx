@@ -404,6 +404,7 @@ export default function AnalyticsDashboardPage() {
       <div className="animate-fade-in-up animation-delay-300">
         <DataTable
           reports={data}
+          externalSearchQuery={searchQuery}
           onView={(r) => setSelectedReport(r)}
           onCompare={handleCompare}
           onToggleFavorite={(id) => setData((prev) => prev.map((r) => (r.id === id ? { ...r, favorite: !r.favorite } : r)))}
