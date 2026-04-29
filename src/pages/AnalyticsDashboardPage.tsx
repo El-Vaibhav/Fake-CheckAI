@@ -310,7 +310,7 @@ export default function AnalyticsDashboardPage() {
     >
 
       {isDashboardLoading && (
-        <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+        <div className="mb-4 rounded-xl border border-primary/20 dark:border-slate-700 bg-primary/5 dark:bg-slate-900/60 px-4 py-3 text-sm text-primary">
           Please wait for a few seconds while data is being fetched.
         </div>
       )}
@@ -458,7 +458,7 @@ export default function AnalyticsDashboardPage() {
         />
       </div>
 
-      <Card className="rounded-2xl border-primary/15 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 animate-fade-in-up animation-delay-400">
+      <Card className="rounded-2xl border-primary/15 dark:border-slate-800 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-[#10162d] animate-fade-in-up animation-delay-400">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Comparison View</CardTitle>
           {compareList.length > 0 && (
@@ -467,20 +467,20 @@ export default function AnalyticsDashboardPage() {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70">
+        <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90">
           <ComparisonView selected={compareList} />
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-primary/15 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 animate-fade-in-up animation-delay-500">
+      <Card className="rounded-2xl border-primary/15 dark:border-slate-800 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-[#10162d] animate-fade-in-up animation-delay-500">
         <CardHeader>
           <CardTitle>Saved Reports & Exports</CardTitle>
         </CardHeader>
-        <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 space-y-3">
+        <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90 space-y-3">
           {savedExports.map((item) => (
             <div
               key={item.id}
-              className="border rounded-xl p-3 bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 flex flex-col sm:flex-row sm:items-center gap-2 justify-between overflow-hidden"
+              className="border dark:border-slate-800 rounded-xl p-3 bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70 flex flex-col sm:flex-row sm:items-center gap-2 justify-between overflow-hidden"
             >
               <div className="min-w-0">
                 <p className="font-medium break-words">

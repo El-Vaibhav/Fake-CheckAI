@@ -79,7 +79,7 @@ export function DataTable({ reports, externalSearchQuery = "", onView, onCompare
   };
 
   return (
-    <Card ref={tableRef} className="rounded-2xl border-primary/15 shadow-sm bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 animate-fade-in-up">
+    <Card ref={tableRef} className="rounded-2xl border-primary/15 dark:border-slate-800 shadow-sm bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-[#10162d] animate-fade-in-up">
       <CardHeader className="space-y-4">
         <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
           <CardTitle>Scan History</CardTitle>
@@ -102,7 +102,7 @@ export function DataTable({ reports, externalSearchQuery = "", onView, onCompare
           </div>
         </div>
       </CardHeader>
-      <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70">
+      <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90">
         {sliced.length === 0 ? (
           <div className="h-36 border border-dashed rounded-xl bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 flex items-center justify-center text-muted-foreground">
             No reports found. Try changing filters.
@@ -122,7 +122,7 @@ export function DataTable({ reports, externalSearchQuery = "", onView, onCompare
               </TableHeader>
               <TableBody>
                 {sliced.map((row) => (
-                  <TableRow key={row.id} className={`bg-gradient-to-r from-cyan-50/30 to-purple-50/30 hover:bg-primary/5 transition-all duration-300 ${row.id === highlightedRowId ? "ring-2 ring-primary/60 bg-primary/10" : ""}`}>
+                  <TableRow key={row.id} className={`bg-gradient-to-r from-cyan-50/30 to-purple-50/30 dark:from-slate-900/50 dark:to-slate-900/50 hover:bg-primary/5 dark:hover:bg-slate-800/50 transition-all duration-300 ${row.id === highlightedRowId ? "ring-2 ring-primary/60 bg-primary/10 dark:bg-slate-800/60" : ""}`}>
                     <TableCell className="min-w-72">
                       <p className="font-medium line-clamp-1">{row.title}</p>
                       <p className="text-xs text-muted-foreground">{row.id}</p>
