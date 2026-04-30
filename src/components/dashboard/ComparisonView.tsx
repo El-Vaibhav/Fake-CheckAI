@@ -9,8 +9,8 @@ interface Props {
 export function ComparisonView({ selected }: Props) {
   if (selected.length === 0) {
     return (
-      <Card className="rounded-2xl border-dashed bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85">
-        <CardContent className="h-32 bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 flex items-center justify-center text-muted-foreground">
+      <Card className="rounded-2xl border-dashed dark:border-slate-700 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-[#10162d]">
+        <CardContent className="h-32 bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90 flex items-center justify-center text-muted-foreground">
           Select reports with the Compare action to see side-by-side differences.
         </CardContent>
       </Card>
@@ -30,7 +30,7 @@ export function ComparisonView({ selected }: Props) {
       {selected.map((report) => (
         <Card
           key={report.id}
-          className="rounded-2xl bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85"
+          className="rounded-2xl border dark:border-slate-800 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-[#10162d]"
         >
           <CardHeader>
             <CardTitle className="text-sm line-clamp-2">
@@ -38,7 +38,7 @@ export function ComparisonView({ selected }: Props) {
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 space-y-3 text-sm">
+          <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90 space-y-3 text-sm">
 
             {/* TYPE */}
             <div className="flex justify-between items-center">

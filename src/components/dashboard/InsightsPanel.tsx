@@ -60,18 +60,18 @@ export function InsightsPanel() {
   }, []);
 
   return (
-    <Card className="rounded-2xl border-primary/20 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 shadow-sm">
+    <Card className="rounded-2xl border-primary/20 dark:border-slate-800 bg-gradient-to-br from-cyan-100/90 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-[#10162d] shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="w-5 h-5 text-primary" /> AI Insights
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 space-y-3">
+      <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90 space-y-3">
         {insights.map((text, idx) => (
           <div
             key={idx}
-            className="rounded-xl p-3 border bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85"
+            className="rounded-xl p-3 border dark:border-slate-800 bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70"
           >
             <p className="text-sm flex items-start gap-2">
               <TrendingUp className="w-4 h-4 mt-0.5 text-primary" />
