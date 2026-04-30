@@ -43,10 +43,14 @@ type ExportReport = {
   text: string;
 };
 
+type DashboardReport = Report & {
+  createdAt: string;
+};
+
 export default function AnalyticsDashboardPage() {
-  const [data, setData] = useState<Report[]>([]);
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [compareList, setCompareList] = useState<Report[]>([]);
+  const [data, setData] = useState<DashboardReport[]>([]);
+  const [selectedReport, setSelectedReport] = useState<DashboardReport | null>(null);
+  const [compareList, setCompareList] = useState<DashboardReport[]>([]);
   const [loadingCharts] = useState(false);
   const [trendMode, setTrendMode] = useState<"Daily" | "Weekly" | "Monthly">("Daily");
   const [chartData, setChartData] = useState<any[]>([]);
@@ -158,6 +162,7 @@ export default function AnalyticsDashboardPage() {
               item.type === "AI Generated" || item.type === "Human Written"
                 ? "AI Detection"
                 : "News Analysis",
+            createdAt: item.date,
 
             exported: false,
             favorite: false,
@@ -196,11 +201,23 @@ export default function AnalyticsDashboardPage() {
       .finally(() => setLoadingState((prev) => ({ ...prev, metrics: false })));
   }, []);
 
+  const dateFilteredData = useMemo(() => {
+    const days = dateFilter === "7days" ? 7 : dateFilter === "90days" ? 90 : 30;
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - days);
+
+    return data.filter((r) => {
+      const parsed = new Date(r.createdAt);
+      return !isNaN(parsed.getTime()) && parsed >= cutoff;
+    });
+  }, [data, dateFilter]);
+
   const filteredData = useMemo(() => {
-    if (typeFilter === "fake") return data.filter((r) => r.type === "fake" || r.type === "real");
-    if (typeFilter === "ai") return data.filter((r) => r.type === "ai" || r.type === "human");
-    return data;
-  }, [data, typeFilter]);
+    if (typeFilter === "fake") return dateFilteredData.filter((r) => r.type === "fake" || r.type === "real");
+    if (typeFilter === "ai") return dateFilteredData.filter((r) => r.type === "ai" || r.type === "human");
+    return dateFilteredData;
+  }, [dateFilteredData, typeFilter]);
 
   const metrics = useMemo(() => {
     const total = filteredData.length;
@@ -238,7 +255,17 @@ export default function AnalyticsDashboardPage() {
   };
   const navigate = useNavigate();
 
-  const savedExports = exports;
+  const savedExports = useMemo(() => {
+    const days = dateFilter === "7days" ? 7 : dateFilter === "90days" ? 90 : 30;
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - days);
+
+    return exports.filter((item) => {
+      const parsed = new Date(item.date);
+      return !isNaN(parsed.getTime()) && parsed >= cutoff;
+    });
+  }, [exports, dateFilter]);
   const trendSeries = useMemo(() => {
     if (trendMode === "Weekly") {
       return trendData.map((point, idx) => ({
