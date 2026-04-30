@@ -293,19 +293,44 @@ export default function AnalyticsDashboardPage() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [filteredData, sourceData, typeFilter]);
 
+  const aggregateTrendByMode = useMemo(() => {
+    return (rows: Array<{ time: string; fake: number; ai: number }>) => {
+      if (trendMode === "Daily") return rows;
+
+      const chunkSize = trendMode === "Weekly" ? 7 : 30;
+      const aggregated: Array<{ time: string; fake: number; ai: number }> = [];
+
+      for (let i = 0; i < rows.length; i += chunkSize) {
+        const chunk = rows.slice(i, i + chunkSize);
+        if (chunk.length === 0) continue;
+
+        aggregated.push({
+          time: chunk[chunk.length - 1].time,
+          fake: chunk.reduce((sum, r) => sum + (r.fake || 0), 0),
+          ai: chunk.reduce((sum, r) => sum + (r.ai || 0), 0),
+        });
+      }
+
+      return aggregated;
+    };
+  }, [trendMode]);
+
   const displayedTrendData = useMemo(() => {
-    if (typeFilter === "both") return chartData;
+    const baseRows =
+      typeFilter === "both"
+        ? chartData
+        : Object.values(
+          filteredData.reduce((acc, r) => {
+            const time = r.date.split(",")[0]?.trim() || r.date;
+            if (!acc[time]) acc[time] = { time, fake: 0, ai: 0 };
+            if (r.type === "fake") acc[time].fake += 1;
+            if (r.type === "ai") acc[time].ai += 1;
+            return acc;
+          }, {} as Record<string, { time: string; fake: number; ai: number }>)
+        );
 
-    const buckets: Record<string, { time: string; fake: number; ai: number }> = {};
-    filteredData.forEach((r) => {
-      const time = r.date.split(",")[0]?.trim() || r.date;
-      if (!buckets[time]) buckets[time] = { time, fake: 0, ai: 0 };
-      if (r.type === "fake") buckets[time].fake += 1;
-      if (r.type === "ai") buckets[time].ai += 1;
-    });
-
-    return Object.values(buckets);
-  }, [filteredData, chartData, typeFilter]);
+    return aggregateTrendByMode(baseRows);
+  }, [filteredData, chartData, typeFilter, aggregateTrendByMode]);
 
   return (
     <DashboardLayout
@@ -350,7 +375,7 @@ export default function AnalyticsDashboardPage() {
                 </div>
 
                 <ResponsiveContainer width="100%" height="85%">
-                  <LineChart data={typeFilter === "both" ? data : displayedTrendData}>
+                  <LineChart data={typeFilter === "both" ? aggregateTrendByMode(data || []) : displayedTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
 
                     <XAxis dataKey="time" />
