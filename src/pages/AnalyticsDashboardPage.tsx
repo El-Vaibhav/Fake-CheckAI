@@ -208,15 +208,23 @@ export default function AnalyticsDashboardPage() {
     const aiCount = filteredData.filter((r) => r.type === "ai").length;
     const analysisCount = filteredData.filter((r) => r.type === "fake" || r.type === "real").length;
     const aiDetectionCount = filteredData.filter((r) => r.type === "ai" || r.type === "human").length;
+    const accuracy =
+      total > 0
+        ? Number(
+          (
+            filteredData.reduce((sum, row) => sum + (Number(row.confidence_score) || 0), 0) / total
+          ).toFixed(2)
+        )
+        : 0;
 
     return {
       total,
       fakePct: analysisCount > 0 ? Math.round((fakeCount / analysisCount) * 100) : 0,
       aiPct: aiDetectionCount > 0 ? Math.round((aiCount / aiDetectionCount) * 100) : 0,
-      accuracy: metricsData.accuracy || 0,
+      accuracy,
       exported: metricsData.exported || 0
     };
-  }, [filteredData, metricsData.accuracy, metricsData.exported]);
+  }, [filteredData, metricsData.exported]);
 
   const handleCompare = (report: Report) => {
     setCompareList((prev) => {
