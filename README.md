@@ -15,6 +15,10 @@ Backend API: https://fake-checkai-8.onrender.com/
 <br><br>
 ![Ss 4](image-3.png)
 <br><br>
+<img width="1873" height="773" alt="image" src="https://github.com/user-attachments/assets/31768a52-cb5c-4985-94b7-2a9175654465" />
+<br><br>
+<img width="1854" height="900" alt="image" src="https://github.com/user-attachments/assets/63a280c8-e3bd-4537-bf29-923f2d390233" />
+<br><br>
 ![Ss 5](image-4.png)
 <br><br>
 ![Ss 6](image-5.png)
