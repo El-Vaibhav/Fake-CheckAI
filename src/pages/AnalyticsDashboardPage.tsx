@@ -244,13 +244,18 @@ export default function AnalyticsDashboardPage() {
   }, [filteredData, metricsData.exported]);
 
   const handleCompare = (report: Report) => {
+    const enrichedReport: DashboardReport = {
+      ...report,
+      createdAt: new Date().toISOString(), // or report.date if exists
+    };
+
     setCompareList((prev) => {
       if (prev.some((r) => r.id === report.id)) return prev;
       if (prev.length >= 3) {
         toast.error("You can compare up to 3 reports at once.");
         return prev;
       }
-      return [...prev, report];
+      return [...prev, enrichedReport];
     });
   };
   const navigate = useNavigate();
@@ -507,7 +512,12 @@ export default function AnalyticsDashboardPage() {
         <DataTable
           reports={filteredData}
           externalSearchQuery={searchQuery}
-          onView={(r) => setSelectedReport(r)}
+          onView={(r) =>
+            setSelectedReport({
+              ...r,
+              createdAt: new Date().toISOString(),
+            })
+          }
           onCompare={handleCompare}
           onToggleFavorite={(id) => setData((prev) => prev.map((r) => (r.id === id ? { ...r, favorite: !r.favorite } : r)))}
           onDelete={(id) => {
