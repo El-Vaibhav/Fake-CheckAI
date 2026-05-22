@@ -166,7 +166,7 @@ Deployment → Vercel (Frontend) + Render (Backend)
 ---
 
 # 📂 Project Structure
-
+```text
 FakeCheckAI/
 │
 ├── backend/
@@ -181,7 +181,7 @@ FakeCheckAI/
 │ ├── vite.config.ts
 │
 └── README.md
-
+```
 
 ---
 
