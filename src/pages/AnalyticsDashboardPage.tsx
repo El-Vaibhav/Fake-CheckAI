@@ -202,6 +202,8 @@ export default function AnalyticsDashboardPage() {
   }, []);
 
   const dateFilteredData = useMemo(() => {
+    if (dateFilter === "alltime") return data;
+
     const days = dateFilter === "7days" ? 7 : dateFilter === "90days" ? 90 : 30;
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
@@ -261,6 +263,8 @@ export default function AnalyticsDashboardPage() {
   const navigate = useNavigate();
 
   const savedExports = useMemo(() => {
+    if (dateFilter === "alltime") return exports;
+
     const days = dateFilter === "7days" ? 7 : dateFilter === "90days" ? 90 : 30;
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
