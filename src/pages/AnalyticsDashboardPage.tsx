@@ -320,6 +320,11 @@ export default function AnalyticsDashboardPage() {
     ];
   }, [filteredData, typeFilter]);
 
+  const displayedPieData = useMemo(
+    () => realPieData.filter(({ value }) => value > 0),
+    [realPieData]
+  );
+
   const displayedSourceData = useMemo(() => {
     if (typeFilter === "both") return sourceData;
     const counts: Record<string, number> = {};
@@ -451,24 +456,38 @@ export default function AnalyticsDashboardPage() {
           <ChartCard title="Category Distribution">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={realPieData}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={95}
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
-                >
-                  {realPieData.map((entry, idx) => (
-                    <Cell
-                      key={entry.name}
-                      fill={pieColors[entry.name as keyof typeof pieColors]}
-                    />
-                  ))}
-                </Pie>
+                {displayedPieData.length > 0 ? (
+                  <Pie
+                    data={displayedPieData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={95}
+                    labelLine={false}
+                    label={({ name, percent }) =>
+                      percent >= 0.03 ? `${name} ${(percent * 100).toFixed(0)}%` : ""
+                    }
+                  >
+                    {displayedPieData.map((entry) => (
+                      <Cell
+                        key={entry.name}
+                        fill={pieColors[entry.name as keyof typeof pieColors]}
+                      />
+                    ))}
+                  </Pie>
+                ) : (
+                  <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="fill-muted-foreground text-sm"
+                  >
+                    No category data available
+                  </text>
+                )}
 
                 <Tooltip />
+                <Legend />
 
               </PieChart>
             </ResponsiveContainer>
