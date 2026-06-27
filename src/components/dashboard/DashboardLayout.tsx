@@ -65,6 +65,7 @@ export function DashboardLayout({
           <Select value={dateFilter} onValueChange={setDateFilter}>
             <SelectTrigger className="w-[132px] sm:w-36 rounded-xl h-9 sm:h-10 text-xs sm:text-sm transition-all duration-300 hover:shadow-md"><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="alltime">All time</SelectItem>
               <SelectItem value="7days">Last 7 days</SelectItem>
               <SelectItem value="30days">Last 30 days</SelectItem>
               <SelectItem value="90days">Last 90 days</SelectItem>
