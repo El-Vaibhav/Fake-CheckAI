@@ -47,6 +47,49 @@ type DashboardReport = Report & {
   createdAt: string;
 };
 
+const DATE_FILTER_DAYS: Record<string, number> = {
+  "7days": 7,
+  "30days": 30,
+  "90days": 90,
+};
+
+const DATE_FILTER_LABELS: Record<string, string> = {
+  alltime: "all time",
+  "7days": "last 7 days",
+  "30days": "last 30 days",
+  "90days": "last 90 days",
+};
+
+const getDateFilterDays = (dateFilter: string) => DATE_FILTER_DAYS[dateFilter] ?? 30;
+
+const isWithinPreviousDateRange = (date: string, dateFilter: string) => {
+  if (dateFilter === "alltime") return false;
+
+  const days = getDateFilterDays(dateFilter);
+  const currentCutoff = new Date();
+  currentCutoff.setHours(0, 0, 0, 0);
+  currentCutoff.setDate(currentCutoff.getDate() - days);
+
+  const previousCutoff = new Date(currentCutoff);
+  previousCutoff.setDate(previousCutoff.getDate() - days);
+
+  const parsed = new Date(date);
+  return !isNaN(parsed.getTime()) && parsed >= previousCutoff && parsed < currentCutoff;
+};
+
+const formatTrend = (current: number, previous: number) => {
+  if (previous === 0) {
+    if (current === 0) return "0%";
+    return "+100%";
+  }
+
+  const change = ((current - previous) / Math.abs(previous)) * 100;
+  const rounded = Number(change.toFixed(1));
+  return `${rounded > 0 ? "+" : ""}${rounded}%`;
+};
+
+const isPositiveTrend = (trend: string) => !trend.startsWith("-");
+
 export default function AnalyticsDashboardPage() {
   const [data, setData] = useState<DashboardReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<DashboardReport | null>(null);
@@ -204,7 +247,7 @@ export default function AnalyticsDashboardPage() {
   const dateFilteredData = useMemo(() => {
     if (dateFilter === "alltime") return data;
 
-    const days = dateFilter === "7days" ? 7 : dateFilter === "90days" ? 90 : 30;
+    const days = getDateFilterDays(dateFilter);
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - days);
@@ -241,9 +284,8 @@ export default function AnalyticsDashboardPage() {
       fakePct: analysisCount > 0 ? Math.round((fakeCount / analysisCount) * 100) : 0,
       aiPct: aiDetectionCount > 0 ? Math.round((aiCount / aiDetectionCount) * 100) : 0,
       accuracy,
-      exported: metricsData.exported || 0
     };
-  }, [filteredData, metricsData.exported]);
+  }, [filteredData]);
 
   const handleCompare = (report: Report) => {
     const enrichedReport: DashboardReport = {
@@ -265,7 +307,7 @@ export default function AnalyticsDashboardPage() {
   const savedExports = useMemo(() => {
     if (dateFilter === "alltime") return exports;
 
-    const days = dateFilter === "7days" ? 7 : dateFilter === "90days" ? 90 : 30;
+    const days = getDateFilterDays(dateFilter);
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - days);
@@ -275,6 +317,60 @@ export default function AnalyticsDashboardPage() {
       return !isNaN(parsed.getTime()) && parsed >= cutoff;
     });
   }, [exports, dateFilter]);
+
+  const previousFilteredData = useMemo(() => {
+    if (dateFilter === "alltime") return [];
+
+    const previousPeriodRows = data.filter((r) => isWithinPreviousDateRange(r.createdAt, dateFilter));
+
+    if (typeFilter === "fake") return previousPeriodRows.filter((r) => r.type === "fake" || r.type === "real");
+    if (typeFilter === "ai") return previousPeriodRows.filter((r) => r.type === "ai" || r.type === "human");
+    return previousPeriodRows;
+  }, [data, dateFilter, typeFilter]);
+
+  const previousExports = useMemo(
+    () => exports.filter((item) => isWithinPreviousDateRange(item.date, dateFilter)),
+    [exports, dateFilter]
+  );
+
+  const metricTrends = useMemo(() => {
+    const previousTotal = previousFilteredData.length;
+    const previousFakeCount = previousFilteredData.filter((r) => r.type === "fake").length;
+    const previousAiCount = previousFilteredData.filter((r) => r.type === "ai").length;
+    const previousAnalysisCount = previousFilteredData.filter((r) => r.type === "fake" || r.type === "real").length;
+    const previousAiDetectionCount = previousFilteredData.filter((r) => r.type === "ai" || r.type === "human").length;
+    const previousAccuracy =
+      previousTotal > 0
+        ? Number(
+          (
+            previousFilteredData.reduce((sum, row) => sum + (Number(row.confidence_score) || 0), 0) / previousTotal
+          ).toFixed(2)
+        )
+        : 0;
+    const previousFakePct = previousAnalysisCount > 0 ? Math.round((previousFakeCount / previousAnalysisCount) * 100) : 0;
+    const previousAiPct = previousAiDetectionCount > 0 ? Math.round((previousAiCount / previousAiDetectionCount) * 100) : 0;
+
+    if (dateFilter === "alltime") {
+      return {
+        label: "data",
+        total: "All-time",
+        fakePct: "All-time",
+        aiPct: "All-time",
+        accuracy: "All-time",
+        exported: "All-time",
+      };
+    }
+
+    return {
+      label: DATE_FILTER_LABELS[dateFilter] ?? "selected period",
+      total: formatTrend(metrics.total, previousTotal),
+      fakePct: formatTrend(metrics.fakePct, previousFakePct),
+      aiPct: formatTrend(metrics.aiPct, previousAiPct),
+      accuracy: formatTrend(metrics.accuracy, previousAccuracy),
+      exported: formatTrend(savedExports.length, previousExports.length),
+    };
+  }, [dateFilter, metrics, previousExports.length, previousFilteredData, savedExports.length]);
+
   const trendSeries = useMemo(() => {
     if (trendMode === "Weekly") {
       return trendData.map((point, idx) => ({
@@ -390,11 +486,46 @@ export default function AnalyticsDashboardPage() {
       )}
 
       <div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        <MetricCard title="Total Scans" value={`${metrics.total}`} trend="+12.4%" icon={Activity} />
-        <MetricCard title="Fake News Detected" value={`${metrics.fakePct}%`} trend="+5.2%" icon={ShieldAlert} positive={false} />
-        <MetricCard title="AI Generated Content" value={`${metrics.aiPct}%`} trend="+3.7%" icon={Sparkles} positive={false} />
-        <MetricCard title="Accuracy Score" value={`${metrics.accuracy}%`} trend="+1.9%" icon={Target} />
-        <MetricCard title="Reports Exported" value={`${metrics.exported ?? metrics.total}`} trend="+14.1%" icon={FileText} />
+        <MetricCard
+          title="Total Scans"
+          value={`${metrics.total}`}
+          trend={metricTrends.total}
+          trendLabel={metricTrends.label}
+          icon={Activity}
+          positive={isPositiveTrend(metricTrends.total)}
+        />
+        <MetricCard
+          title="Fake News Detected"
+          value={`${metrics.fakePct}%`}
+          trend={metricTrends.fakePct}
+          trendLabel={metricTrends.label}
+          icon={ShieldAlert}
+          positive={dateFilter === "alltime" || !isPositiveTrend(metricTrends.fakePct)}
+        />
+        <MetricCard
+          title="AI Generated Content"
+          value={`${metrics.aiPct}%`}
+          trend={metricTrends.aiPct}
+          trendLabel={metricTrends.label}
+          icon={Sparkles}
+          positive={dateFilter === "alltime" || !isPositiveTrend(metricTrends.aiPct)}
+        />
+        <MetricCard
+          title="Accuracy Score"
+          value={`${metrics.accuracy}%`}
+          trend={metricTrends.accuracy}
+          trendLabel={metricTrends.label}
+          icon={Target}
+          positive={isPositiveTrend(metricTrends.accuracy)}
+        />
+        <MetricCard
+          title="Reports Exported"
+          value={`${savedExports.length}`}
+          trend={metricTrends.exported}
+          trendLabel={metricTrends.label}
+          icon={FileText}
+          positive={isPositiveTrend(metricTrends.exported)}
+        />
       </div>
 
       <div className="grid lg:grid-cols-12 gap-4 animate-fade-in-up animation-delay-100">
