@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn, Mail } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,22 +17,16 @@ import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const navigate = useNavigate();
-
   const { login } = useAuth();
-
   const { toast } = useToast();
-
   const [loading, setLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -46,22 +40,17 @@ export default function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     try {
       setLoading(true);
-
       await login(values.email, values.password);
-
       toast({
         title: "Login Successful",
         description: "Welcome back!",
       });
-
-      navigate("/dashboard");
-    } catch (error: any) {
+      navigate("/app");
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description:
-          error?.response?.data?.message ||
-          "Invalid email or password.",
+        description: getApiErrorMessage(error, "Invalid email or password."),
       });
     } finally {
       setLoading(false);
@@ -69,77 +58,58 @@ export default function LoginForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6"
-    >
-      {/* EMAIL */}
-
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="space-y-2">
-        <Label>Email</Label>
-
-        <Input
-          type="email"
-          placeholder="Enter your email"
-          {...register("email")}
-        />
-
-        {errors.email && (
-          <p className="text-sm text-red-500">
-            {errors.email.message}
-          </p>
-        )}
+        <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+          Email address
+        </Label>
+        <div className="relative">
+          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            className="h-12 rounded-xl bg-background/70 pl-10 shadow-sm transition-all focus-visible:ring-primary/40"
+            aria-invalid={Boolean(errors.email)}
+            {...register("email")}
+          />
+        </div>
+        {errors.email && <p className="text-sm font-medium text-destructive">{errors.email.message}</p>}
       </div>
 
-      {/* PASSWORD */}
-
       <div className="space-y-2">
-
-        <Label>Password</Label>
-
+        <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+          Password
+        </Label>
         <div className="relative">
-
+          <LockIcon />
           <Input
+            id="password"
             type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
             placeholder="Enter your password"
+            className="h-12 rounded-xl bg-background/70 pl-10 pr-11 shadow-sm transition-all focus-visible:ring-primary/40"
+            aria-invalid={Boolean(errors.password)}
             {...register("password")}
           />
-
           <button
             type="button"
-            className="absolute right-3 top-3 text-muted-foreground"
-            onClick={() =>
-              setShowPassword(!showPassword)
-            }
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            {showPassword ? (
-              <EyeOff size={18} />
-            ) : (
-              <Eye size={18} />
-            )}
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
-
         </div>
-
-        {errors.password && (
-          <p className="text-sm text-red-500">
-            {errors.password.message}
-          </p>
-        )}
+        {errors.password && <p className="text-sm font-medium text-destructive">{errors.password.message}</p>}
       </div>
 
-      {/* BUTTON */}
-
-      <Button
-        type="submit"
-        className="w-full"
-        size="lg"
-        disabled={loading}
-      >
+      <Button type="submit" className="w-full" variant="hero" size="lg" disabled={loading}>
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing In...
+            Signing in...
           </>
         ) : (
           <>
@@ -149,18 +119,50 @@ export default function LoginForm() {
         )}
       </Button>
 
-      <div className="text-center text-sm">
-
-        Don't have an account?
-
-        <Link
-          to="/register"
-          className="ml-2 font-semibold text-primary hover:underline"
-        >
-          Register
+      <p className="text-center text-sm text-muted-foreground">
+        Don&apos;t have an account?
+        <Link to="/register" className="ml-2 font-semibold text-primary transition-colors hover:text-primary/80 hover:underline">
+          Create one
         </Link>
-
-      </div>
+      </p>
     </form>
-);
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+
+  return fallback;
 }

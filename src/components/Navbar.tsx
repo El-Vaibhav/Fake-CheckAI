@@ -17,6 +17,7 @@ const navItems = [
   { name: "How It Works", href: "#how-it-works" },
   { name: "Research", href: "#research" },
   { name: "About", href: "#about" },
+  { name: "Start", href: "/app" },
   { name: "Dashboard", href: "/dashboard" },
 ];
 
@@ -132,9 +133,9 @@ export function Navbar() {
 
                 <Button
                   variant="hero"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/app")}
                 >
-                  Dashboard
+                  Start
                 </Button>
 
                 <DropdownMenu>
@@ -154,9 +155,9 @@ export function Navbar() {
                   <DropdownMenuContent align="end">
 
                     <DropdownMenuItem
-                      onClick={() => navigate("/dashboard")}
+                      onClick={() => navigate("/app")}
                     >
-                      Dashboard
+                      Start
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
@@ -240,11 +241,11 @@ export function Navbar() {
                     className="w-full"
                     variant="hero"
                     onClick={() => {
-                      navigate("/dashboard");
+                      navigate("/app");
                       setIsMobileMenuOpen(false);
                     }}
                   >
-                    Dashboard
+                    Start
                   </Button>
 
                   <Button
