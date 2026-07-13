@@ -29,6 +29,20 @@ export function AuthProvider({ children }: Props) {
 
   const [loading, setLoading] = useState(true);
 
+  // ===========================
+  // SET AUTH STATE
+  // ===========================
+  function setAuth(data: AuthResponse) {
+    localStorage.setItem("token", data.token);
+    localStorage.setItem(
+      "user",
+      JSON.stringify(data.user)
+    );
+
+    setToken(data.token);
+    setUser(data.user);
+  }
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
@@ -42,7 +56,10 @@ export function AuthProvider({ children }: Props) {
   // ===========================
   // LOGIN
   // ===========================
-  async function login(email: string, password: string) {
+  async function login(
+    email: string,
+    password: string
+  ) {
     const response = await api.post<AuthResponse>(
       "/login",
       {
@@ -51,50 +68,47 @@ export function AuthProvider({ children }: Props) {
       }
     );
 
-    const data = response.data;
-
-    localStorage.setItem(
-      "token",
-      data.token
-    );
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(data.user)
-    );
-
-    setToken(data.token);
-    setUser(data.user);
+    setAuth(response.data);
   }
 
   // ===========================
   // REGISTER
   // ===========================
   async function register(
-  name: string,
-  email: string,
-  password: string
-) {
-  const response = await api.post<AuthResponse>(
-    "/register",
-    {
-      name,
-      email,
-      password,
-    }
-  );
+    name: string,
+    email: string,
+    password: string
+  ) {
+    const response = await api.post<AuthResponse>(
+      "/register",
+      {
+        name,
+        email,
+        password,
+      }
+    );
 
-  const data = response.data;
+    setAuth(response.data);
+  }
 
-  localStorage.setItem("token", data.token);
-  localStorage.setItem(
-    "user",
-    JSON.stringify(data.user)
-  );
+  // ===========================
+  // GOOGLE LOGIN
+  // ===========================
+  // ===========================
+  // GOOGLE LOGIN
+  // ===========================
+  async function loginWithGoogle(
+    credential: string
+  ) {
+    const response = await api.post<AuthResponse>(
+      "/google-login",
+      {
+        credential,
+      }
+    );
 
-  setToken(data.token);
-  setUser(data.user);
-}
+    setAuth(response.data);
+  }
 
   // ===========================
   // LOGOUT
@@ -118,6 +132,7 @@ export function AuthProvider({ children }: Props) {
         isAuthenticated: !!token,
 
         login,
+        loginWithGoogle,
         register,
         logout,
       }}

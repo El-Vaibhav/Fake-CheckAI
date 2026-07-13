@@ -25,3 +25,4 @@ python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 Flask-JWT-Extended
+google-auth

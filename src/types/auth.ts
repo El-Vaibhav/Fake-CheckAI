@@ -2,6 +2,10 @@ export interface User {
   id: number;
   name: string;
   email: string;
+
+  // Optional fields for Google users
+  profile_picture?: string;
+  provider?: "local" | "google";
 }
 
 export interface LoginRequest {
@@ -28,6 +32,10 @@ export interface AuthContextType {
   isAuthenticated: boolean;
 
   login: (email: string, password: string) => Promise<void>;
+
+  loginWithGoogle: (
+  code: string
+) => Promise<void>;
 
   register: (
     name: string,

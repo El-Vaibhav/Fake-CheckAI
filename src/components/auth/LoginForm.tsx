@@ -15,6 +15,10 @@ import { Label } from "@/components/ui/label";
 
 import { useToast } from "@/hooks/use-toast";
 
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { Chrome } from "lucide-react";
+
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -24,7 +28,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -118,6 +122,54 @@ export default function LoginForm() {
           </>
         )}
       </Button>
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+
+      <GoogleLogin
+        onSuccess={async (credentialResponse) => {
+          try {
+            setLoading(true);
+
+            await loginWithGoogle(
+              credentialResponse.credential!
+            );
+
+            toast({
+              title: "Login Successful",
+              description: "Welcome back!",
+            });
+
+            navigate("/app");
+          } catch (error: unknown) {
+            toast({
+              variant: "destructive",
+              title: "Google Login Failed",
+              description: getApiErrorMessage(
+                error,
+                "Unable to login with Google."
+              ),
+            });
+          } finally {
+            setLoading(false);
+          }
+        }}
+        onError={() => {
+          toast({
+            variant: "destructive",
+            title: "Google Login Failed",
+            description: "Unable to authenticate with Google.",
+          });
+        }}
+      />
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?
