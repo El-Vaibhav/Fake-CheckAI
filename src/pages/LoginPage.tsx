@@ -7,13 +7,13 @@ export default function LoginPage() {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   return (
     <AuthLayout
       title="Welcome Back"
-      subtitle="Sign in to continue to your FakeCheck AI dashboard."
+      subtitle="Sign in to open your FakeCheck AI starting workspace."
     >
       <LoginForm />
     </AuthLayout>

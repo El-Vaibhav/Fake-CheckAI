@@ -53,7 +53,7 @@ export default function RegisterForm() {
         title: "Registration Successful",
         description: "Welcome to FakeCheck AI!",
       });
-      navigate("/dashboard");
+      navigate("/app");
     } catch (error: unknown) {
       toast({
         variant: "destructive",

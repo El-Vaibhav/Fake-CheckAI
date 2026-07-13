@@ -45,7 +45,7 @@ export default function LoginForm() {
         title: "Login Successful",
         description: "Welcome back!",
       });
-      navigate("/dashboard");
+      navigate("/app");
     } catch (error: unknown) {
       toast({
         variant: "destructive",

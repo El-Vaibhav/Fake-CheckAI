@@ -9,6 +9,7 @@ import AiDetectorPage from "./pages/AiDetectorPage";
 import CrossVerifyPage from "./pages/CrossVerifyPage";
 import NotFound from "./pages/NotFound";
 import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
+import UserLandingPage from "./pages/UserLandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -29,6 +30,15 @@ const App = () => (
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Protected */}
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <UserLandingPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/dashboard"
             element={
