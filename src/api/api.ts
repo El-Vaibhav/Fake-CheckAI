@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://fake-checkai-8.onrender.com";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,10 +11,7 @@ const api = axios.create({
   },
 });
 
-// ===============================
 // REQUEST INTERCEPTOR
-// Automatically attach JWT token
-// ===============================
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -27,18 +25,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ===============================
 // RESPONSE INTERCEPTOR
-// Handle expired tokens
-// ===============================
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-
-      // redirect to login
       window.location.href = "/login";
     }
 
