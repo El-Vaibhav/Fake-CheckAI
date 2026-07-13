@@ -28,6 +28,7 @@ import {
   YAxis,
 } from "recharts";
 import { useNavigate } from "react-router";
+import api from "@/api/api";
 
 const pieColors = {
   "Real News": "#22c55e",   // green
@@ -125,42 +126,33 @@ export default function AnalyticsDashboardPage() {
   });
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/source-wise-stats`)
-      .then(res => res.json())
-      .then(data => setSourceData(data))
+    api.get("/source-wise-stats")
+      .then(res => setSourceData(res.data))
       .catch(err => console.error(err))
       .finally(() => setLoadingState((prev) => ({ ...prev, source: false })));
   }, []);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/exports`)
-      .then(res => res.json())
-      .then(data => setExports(data))
+    api.get("/exports")
+      .then(res => setExports(res.data))
       .catch(err => console.error("Export fetch error:", err))
       .finally(() => setLoadingState((prev) => ({ ...prev, exports: false })));
   }, []);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/chart-data`)
-      .then(res => res.json())
-      .then(data => {
-        const formatted = data.map((item: any) => ({
-          date: new Date(item.date).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-          }),
-          count: item.count
-        }));
-
-        setChartData(formatted);
+    api.get("/chart-data")
+      .then((res) => {
+        setChartData(res.data);
       })
-      .catch(err => console.error("Chart error:", err))
-      .finally(() => setLoadingState((prev) => ({ ...prev, chart: false })));
+      .catch(console.error)
+      .finally(() =>
+        setLoadingState(prev => ({ ...prev, chart: false }))
+      );
   }, []);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/table-data`)
-      .then(res => res.json())
+    api.get("/table-data")
+      .then(res => res.data)
       .then(apiData => {
         // 🔥 convert backend → your Report format
         const formatted = apiData.map((item: any, index: number) => {
@@ -219,8 +211,8 @@ export default function AnalyticsDashboardPage() {
   }, []);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/metrics`)
-      .then(res => res.json())
+    api.get("/metrics")
+      .then(res => res.data)
       .then(data => {
         console.log("METRICS:", data); // debug log
         // normalize and guard types
@@ -530,8 +522,8 @@ export default function AnalyticsDashboardPage() {
 
       <div className="grid lg:grid-cols-12 gap-4 animate-fade-in-up animation-delay-100">
         <div className="lg:col-span-7 space-y-4">
-          <ChartCard title="Detection Trends Over Time" dataUrl="/chart-data">
-            {(data) => (
+          <ChartCard title="Detection Trends Over Time">
+            <>
               <div className="h-full">
                 <div className="flex gap-2 mb-3">
                   {(["Daily", "Weekly", "Monthly"] as const).map((mode) => (
@@ -547,7 +539,7 @@ export default function AnalyticsDashboardPage() {
                 </div>
 
                 <ResponsiveContainer width="100%" height="85%">
-                  <LineChart data={typeFilter === "both" ? aggregateTrendByMode(data || []) : displayedTrendData}>
+                  <LineChart data={typeFilter === "both" ? aggregateTrendByMode(chartData || []) : displayedTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
 
                     <XAxis dataKey="time" />
@@ -579,7 +571,7 @@ export default function AnalyticsDashboardPage() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            )}
+            </>
           </ChartCard>
         </div>
 
@@ -727,9 +719,48 @@ export default function AnalyticsDashboardPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    const url = `${import.meta.env.VITE_API_BASE_URL}/download-report/${item.report_id}`;
-                    window.open(url);
+                  onClick={async () => {
+                    try {
+                      const response = await api.get(
+                        `/download-report/${item.report_id}`,
+                        {
+                          responseType: "blob",
+                        }
+                      );
+
+                      const blob = new Blob([response.data], {
+                        type: "application/pdf",
+                      });
+
+                      const url = window.URL.createObjectURL(blob);
+
+                      const link = document.createElement("a");
+                      link.href = url;
+
+                      link.download = `${item.text
+                          ?.slice(0, 40)
+                          .replace(/[^\w\s]/g, "")
+                          .replace(/\s+/g, "_") || "report"
+                        }.pdf`;
+
+                      document.body.appendChild(link);
+                      link.click();
+
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+
+                      toast.success("Report downloaded successfully");
+
+                    } catch (error: any) {
+                      console.error("Download error:", error);
+
+                      if (error.response) {
+                        console.log("Status:", error.response.status);
+                        console.log("Data:", error.response.data);
+                      }
+
+                      toast.error("Failed to download report");
+                    }
                   }}
                 >
                   Download

@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Report } from "@/data/dashboardMock";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
-
+import api from "@/api/api";
 interface Props {
   report: Report | null;
   open: boolean;
@@ -87,17 +87,44 @@ export function ReportModal({ report, open, onOpenChange }: Props) {
 
             <Button
               className="w-full"
-              onClick={() => {
-                const url = `${import.meta.env.VITE_API_BASE_URL}/download-report/${report.id}`;
-                // create hidden link to trigger download
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = `report_${report.id}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+              onClick={async () => {
+                const loadingToast = toast.loading("Preparing report...");
 
-                toast.success("Downloading report...");
+                try {
+                  const response = await api.get(
+                    `/download-report/${report.id}`,
+                    {
+                      responseType: "blob",
+                    }
+                  );
+
+                  const blob = new Blob([response.data], {
+                    type: "application/pdf",
+                  });
+
+                  const url = window.URL.createObjectURL(blob);
+
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = `report_${report.id}.pdf`;
+
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+
+                  window.URL.revokeObjectURL(url);
+
+                  toast.success("Download started", {
+                    id: loadingToast,
+                  });
+
+                } catch (err) {
+                  console.error(err);
+
+                  toast.error("Failed to download report", {
+                    id: loadingToast,
+                  });
+                }
               }}
             >
               <Download className="w-4 h-4 mr-2" />

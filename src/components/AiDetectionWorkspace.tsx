@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import api from "@/api/api";
 import {
   Upload,
   FileText,
@@ -89,15 +90,10 @@ export function AIDetectionWorkspace() {
     setResult(null);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai-detect`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
+      const { data } = await api.post("/ai-detect", {
+        text,
       });
 
-      const data = await response.json();
       const adjustedConfidence = adjustConfidence(data.confidence);
 
       setResult({
@@ -118,13 +114,12 @@ export function AIDetectionWorkspace() {
     }
     // Paragraph-level detection
     // Sentence-level detection
-    const paraResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai-detect-sentences`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-
-    const paraData = await paraResponse.json();
+    const { data: paraData } = await api.post(
+      "/ai-detect-sentences",
+      {
+        text,
+      }
+    );
     setParagraphResults(paraData.sentences);
 
   };
@@ -157,15 +152,15 @@ export function AIDetectionWorkspace() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/extract-pdf`,
+        const { data } = await api.post(
+          "/extract-pdf",
+          formData,
           {
-            method: "POST",
-            body: formData,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
-
-        const data = await response.json();
 
         if (!data.text || data.text.trim().length === 0) {
           alert("No readable text found in PDF.");
@@ -209,15 +204,15 @@ export function AIDetectionWorkspace() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/extract-pdf`,
+        const { data } = await api.post(
+          "/extract-pdf",
+          formData,
           {
-            method: "POST",
-            body: formData,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
-
-        const data = await response.json();
 
         if (!data.text || data.text.trim().length === 0) {
           alert("No readable text found in PDF.");
@@ -247,26 +242,25 @@ export function AIDetectionWorkspace() {
     if (!result) return alert("No analysis available!");
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/download-report`,
+      const response = await api.post(
+        "/download-report",
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            report_type: "AI Authorship",
-            prediction: result.prediction.toUpperCase(),
-            confidence: result.confidence,
-            credibility_score:
-              result.prediction === "human"
-                ? result.confidence
-                : 100 - result.confidence,
-            reasons: result.reasons,
-            article_text: text,
-          }),
+          report_type: "AI Authorship",
+          prediction: result.prediction.toUpperCase(),
+          confidence: result.confidence,
+          credibility_score:
+            result.prediction === "human"
+              ? result.confidence
+              : 100 - result.confidence,
+          reasons: result.reasons,
+          article_text: text,
+        },
+        {
+          responseType: "blob",
         }
       );
 
-      const blob = await response.blob();
+      const blob = response.data;
       const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -428,8 +422,8 @@ export function AIDetectionWorkspace() {
                     <div
                       key={index}
                       className={`p-4 rounded-xl border transition-all ${isAI
-                          ? "bg-red-500/10 border-red-500"
-                          : "bg-green-500/10 border-green-500"
+                        ? "bg-red-500/10 border-red-500"
+                        : "bg-green-500/10 border-green-500"
                         }`}
                     >
                       <div className="text-xs mb-2 font-semibold flex justify-between">

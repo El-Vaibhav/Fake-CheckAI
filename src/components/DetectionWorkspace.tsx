@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ResultsSection } from "./ResultsSection";
 import { useNavigate } from "react-router-dom";
 import { Globe } from "lucide-react";
-
+import api from "@/api/api";
 
 type AnalysisResult = {
   prediction: "real" | "fake";
@@ -140,18 +140,9 @@ export function DetectionWorkspace() {
     setIsFetchingUrl(true);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/analyze-url`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ url }),
-        }
-      );
-
-      const data = await response.json();
+      const { data } = await api.post("/analyze-url", {
+        url,
+      });
 
       if (data.error) {
         alert(data.error);
@@ -180,15 +171,11 @@ export function DetectionWorkspace() {
     console.log("ANALYZE CLICKED, sending to backend");
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/predict`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
+      const { data } = await api.post("/predict", {
+        text,
       });
 
-      const data = await response.json();
+      console.log("RESPONSE:", data);
       console.log("RESPONSE FROM BACKEND:", data);
 
       const rawConfidence = Math.round(data.confidence * 100);
@@ -199,15 +186,13 @@ export function DetectionWorkspace() {
         reasons: buildReasons(data),
       });
       // 🔎 Call search API
-      const searchResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/search-news`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
-      });
+      const { data: searchData } = await api.post(
+        "/search-news",
+        {
+          text,
+        }
+      );
 
-      const searchData = await searchResponse.json();
       setSearchResults(searchData.results || []);
       setCoverageStrength(searchData.coverage_strength || null);
       setSourceQuality(searchData.source_quality || null);
@@ -254,12 +239,15 @@ export function DetectionWorkspace() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/extract-pdf`, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
+        const { data } = await api.post(
+          "/extract-pdf",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         setText(data.text.slice(0, maxChars));
       } catch (err) {
         console.error(err);
@@ -296,12 +284,15 @@ export function DetectionWorkspace() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/extract-pdf`, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
+        const { data } = await api.post(
+          "/extract-pdf",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
 
         if (!data.text || data.text.trim().length === 0) {
           alert("No readable text found in PDF.");
@@ -336,12 +327,9 @@ export function DetectionWorkspace() {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/download-report`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await api.post(
+        "/download-report",
+        {
           prediction: result.prediction.toUpperCase(),
           confidence: result.confidence,
           credibility_score:
@@ -350,10 +338,15 @@ export function DetectionWorkspace() {
               : 100 - result.confidence,
           reasons: result.reasons,
           article_text: text,
-        }),
-      });
+        },
+        {
+          responseType: "blob",
+        }
+      );
 
-      const blob = await response.blob();
+      const blob = response.data;
+
+
       const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");

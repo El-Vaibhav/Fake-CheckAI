@@ -9,6 +9,9 @@ import AiDetectorPage from "./pages/AiDetectorPage";
 import CrossVerifyPage from "./pages/CrossVerifyPage";
 import NotFound from "./pages/NotFound";
 import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -19,12 +22,42 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+
+          {/* Public */}
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="/ai-detector" element={<AiDetectorPage />} />
-          <Route path="/cross-verify" element={<CrossVerifyPage />} />
-          <Route path="/dashboard" element={<AnalyticsDashboardPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* Protected */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <AnalyticsDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/ai-detector"
+            element={
+              <ProtectedRoute>
+                <AiDetectorPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cross-verify"
+            element={
+              <ProtectedRoute>
+                <CrossVerifyPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<NotFound />} />
+
         </Routes>
       </BrowserRouter>
       <Analytics />

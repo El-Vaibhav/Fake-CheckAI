@@ -2,41 +2,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lightbulb, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+import api from "@/api/api";
 
 export function InsightsPanel() {
   const [insights, setInsights] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/metrics`)
-      .then((res) => res.json())
-      .then((data) => {
+    api
+      .get("/metrics")
+      .then((res) => {
+        const data = res.data;
+
         const generated: string[] = [];
 
-        // 🔴 Fake news insight
-        if (data.fake_pct > 50) {
+        const fakePct = Number(data.fake_pct ?? 0);
+        const aiPct = Number(data.ai_pct ?? 0);
+
+        const total = Number(data.total ?? 0);
+        const analysis = Number(data.analysis_count ?? 0);
+        const ai = Number(data.ai_count ?? 0);
+
+        const real = Number(data.real ?? 0);
+        const fake = Number(data.fake ?? 0);
+
+        // Fake News
+        if (fakePct > 50) {
           generated.push(
-            `Fake news is dominating (${data.fake_pct}%) — high misinformation risk.`
+            `Fake news is dominating (${fakePct}%) — high misinformation risk.`
           );
         } else {
           generated.push(
-            `Fake news is under control at ${data.fake_pct}%.`
+            `Fake news is under control at ${fakePct}%.`
           );
         }
 
-        // 🟣 AI content insight
-        if (data.ai_pct > 40) {
+        // AI
+        if (aiPct > 40) {
           generated.push(
-            `High AI-generated content detected (${data.ai_pct}%).`
+            `High AI-generated content detected (${aiPct}%).`
           );
         } else {
           generated.push(
-            `AI-generated content is moderate (${data.ai_pct}%).`
+            `AI-generated content is moderate (${aiPct}%).`
           );
         }
 
-        // 🟢 Real vs Human insight
-        if (data.real > data.fake) {
+        // Real vs Fake
+        if (real > fake) {
           generated.push(
             "Most analyzed news appears to be reliable."
           );
@@ -46,16 +58,16 @@ export function InsightsPanel() {
           );
         }
 
-        // 🧠 Total activity insight
+        // Total scans
         generated.push(
-          `Total scans: ${data.total} with ${data.analysis_count} news and ${data.ai_count} AI checks.`
+          `Total scans: ${total} with ${analysis} news and ${ai} AI checks.`
         );
 
         setInsights(generated);
       })
       .catch((err) => {
         console.error("Insights error:", err);
-        setInsights(["Failed to load insights"]);
+        setInsights(["Unable to load insights"]);
       });
   }, []);
 

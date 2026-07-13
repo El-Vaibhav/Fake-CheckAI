@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowUpDown, Download, Eye, GitCompareArrows, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Report } from "@/data/dashboardMock";
+import api from "@/api/api";
 
 interface Props {
   reports: Report[];
@@ -150,21 +151,41 @@ export function DataTable({ reports, externalSearchQuery = "", onView, onCompare
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
-                            const url = `${import.meta.env.VITE_API_BASE_URL}/download-report/${row.id}`;
-
-                            // 🔥 show loading first
+                          onClick={async () => {
                             const loadingToast = toast.loading("Preparing report...");
 
-                            const link = document.createElement("a");
-                            link.href = url;
-                            link.download = `report_${row.id}.pdf`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
+                            try {
+                              const response = await api.get(`/download-report/${row.id}`, {
+                                responseType: "blob",
+                              });
 
-                            // 🔥 update toast
-                            toast.success("Download started", { id: loadingToast });
+                              const blob = new Blob([response.data], {
+                                type: "application/pdf",
+                              });
+
+                              const url = window.URL.createObjectURL(blob);
+
+                              const link = document.createElement("a");
+                              link.href = url;
+                              link.download = `report_${row.id}.pdf`;
+
+                              document.body.appendChild(link);
+                              link.click();
+
+                              document.body.removeChild(link);
+                              window.URL.revokeObjectURL(url);
+
+                              toast.success("Download started", {
+                                id: loadingToast,
+                              });
+
+                            } catch (err) {
+                              console.error(err);
+
+                              toast.error("Failed to download report", {
+                                id: loadingToast,
+                              });
+                            }
                           }}
                         >
                           <Download className="w-4 h-4" />

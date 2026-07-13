@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
-import { Brain, Github, Menu, Moon, Sun, X, Cpu } from "lucide-react";
+import { Brain, Github, Menu, Moon, Sun, X, Cpu, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { name: "Home", href: "#home" },
@@ -18,6 +26,12 @@ export function AiNavbar() {
   const [isDark, setIsDark] = useState(false);
 
   const navigate = useNavigate();
+
+  const {
+    user,
+    logout,
+    isAuthenticated,
+  } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,9 +51,8 @@ export function AiNavbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "glass-strong shadow-lg" : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "glass-strong shadow-lg" : "bg-transparent"
+        }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -57,6 +70,11 @@ export function AiNavbar() {
               <span className="text-[10px] text-muted-foreground leading-tight hidden sm:block">
                 AI-Generated Content Detection
               </span>
+              {isAuthenticated && (
+                <span className="text-xs text-primary font-medium">
+                  Welcome, {user?.name}
+                </span>
+              )}
             </div>
           </a>
 
@@ -76,7 +94,7 @@ export function AiNavbar() {
           {/* Right Side */}
           <div className="flex items-center gap-2">
 
-            {/* Back to Fake News Page */}
+            {/* Back */}
             <Button
               variant="ghost"
               size="sm"
@@ -93,10 +111,14 @@ export function AiNavbar() {
               onClick={() => setIsDark(!isDark)}
               className="rounded-full"
             >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {isDark ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
             </Button>
 
-            {/* GitHub */}
+            {/* Github */}
             <a
               href="https://github.com"
               target="_blank"
@@ -108,14 +130,74 @@ export function AiNavbar() {
               </Button>
             </a>
 
-            {/* Try Now Button */}
-            <a href= "#aidetect" className="hidden sm:block">
-              <Button variant="hero" size="default">
-                Analyze AI Content
-              </Button>
-            </a>
+            {!isAuthenticated ? (
+              <div className="hidden sm:flex items-center gap-2">
 
-            {/* Mobile Menu */}
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/login")}
+                >
+                  Login
+                </Button>
+
+                <Button
+                  variant="hero"
+                  onClick={() => navigate("/register")}
+                >
+                  Register
+                </Button>
+
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2">
+
+                <Button
+                  variant="hero"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Dashboard
+                </Button>
+
+                <DropdownMenu>
+
+                  <DropdownMenuTrigger asChild>
+
+                    <Button variant="outline">
+
+                      <User className="mr-2 h-4 w-4" />
+
+                      {user?.name}
+
+                    </Button>
+
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end">
+
+                    <DropdownMenuItem
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      Dashboard
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={logout}
+                      className="text-red-500"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+
+                      Logout
+
+                    </DropdownMenuItem>
+
+                  </DropdownMenuContent>
+
+                </DropdownMenu>
+
+              </div>
+            )}
+
+            {/* Mobile */}
             <Button
               variant="ghost"
               size="icon"
@@ -128,15 +210,15 @@ export function AiNavbar() {
                 <Menu className="w-5 h-5" />
               )}
             </Button>
+
           </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden transition-all duration-300 overflow-hidden ${
-          isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`lg:hidden transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <div className="glass-strong border-t border-border/50 px-4 py-4 space-y-1">
           {navItems.map((item) => (
@@ -151,11 +233,57 @@ export function AiNavbar() {
           ))}
 
           <div className="pt-2">
-            <a href="#detect" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="hero" className="w-full">
-                Analyze AI Content
-              </Button>
-            </a>
+
+            {!isAuthenticated ? (
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    navigate("/login");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Login
+                </Button>
+
+                <Button
+                  variant="hero"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    navigate("/register");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Register
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  onClick={() => {
+                    navigate("/dashboard");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Dashboard
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Logout
+                </Button>
+              </>
+            )}
+
           </div>
 
           <div className="pt-2">

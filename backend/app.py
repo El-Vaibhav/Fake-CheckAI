@@ -1,5 +1,11 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+from flask_jwt_extended import (
+    JWTManager,
+    jwt_required,
+    get_jwt_identity
+)
+from auth import auth_bp
 import joblib
 import pickle
 import re
@@ -66,6 +72,11 @@ nltk.data.path.append(nltk_data_dir)
 app = Flask(__name__)
 CORS(app)
 
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+
+jwt = JWTManager(app)
+
+app.register_blueprint(auth_bp)
 # ----------------------------
 # Load ML bundle
 # ----------------------------
@@ -85,7 +96,9 @@ GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
 from collections import Counter
 
 @app.route("/cross-verify", methods=["POST"])
+@jwt_required()
 def cross_verify():
+    user_id = int(get_jwt_identity())
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -97,7 +110,7 @@ def cross_verify():
         return jsonify({"error": "Invalid or empty text"}), 400
 
     try:
-        # 🔥 run similarity check
+        # run similarity check
         result = check_web_similarity(user_text)
 
         highest_similarity = result.get("highest_similarity", 0)
@@ -114,20 +127,43 @@ def cross_verify():
         else:
             selected_source = "Unknown"
 
+        print("========== CROSS VERIFY ==========")
+        print("JWT Identity:", get_jwt_identity())
+        print("User ID:", user_id)
+        print("Selected Source:", selected_source)
+
         # =========================
         # ✅ INSERT INTO DATABASE
         # =========================
         cursor.execute("""
-            INSERT INTO cross_verify_logs 
-            (input_text, highest_similarity, risk_level, total_sources, source_type, created_at)
-            VALUES (%s, %s, %s, %s, %s, NOW() AT TIME ZONE 'Asia/Kolkata')
-        """, (
-            user_text,
-            highest_similarity,
-            risk_level,
-            total_sources,
-            selected_source
-        ))
+INSERT INTO cross_verify_logs
+(
+input_text,
+highest_similarity,
+risk_level,
+total_sources,
+source_type,
+created_at,
+user_id
+)
+VALUES
+(
+%s,
+%s,
+%s,
+%s,
+%s,
+NOW() AT TIME ZONE 'Asia/Kolkata',
+%s
+)
+""",(
+user_text,
+highest_similarity,
+risk_level,
+total_sources,
+selected_source,
+user_id
+))
 
         conn.commit()
         cursor.close()
@@ -140,7 +176,10 @@ def cross_verify():
         return jsonify({"error": "Internal server error"}), 500
     
 @app.route("/source-wise-stats", methods=["GET"])
+@jwt_required()
 def source_wise_stats():
+
+    user_id = int(get_jwt_identity())
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -148,8 +187,9 @@ def source_wise_stats():
     cursor.execute("""
         SELECT source_type, COUNT(*)
         FROM cross_verify_logs
+        WHERE user_id = %s
         GROUP BY source_type
-    """)
+    """, (user_id,))
 
     rows = cursor.fetchall()
 
@@ -173,7 +213,10 @@ def source_wise_stats():
     ])
 
 @app.route("/cross-verify-stats", methods=["GET"])
+@jwt_required()
 def cross_verify_stats():
+
+    user_id = int(get_jwt_identity())
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -181,8 +224,9 @@ def cross_verify_stats():
     cursor.execute("""
         SELECT risk_level, COUNT(*) 
         FROM cross_verify_logs
+        WHERE user_id = %s
         GROUP BY risk_level
-    """)
+    """, (user_id,))
 
     rows = cursor.fetchall()
 
@@ -205,7 +249,10 @@ def cross_verify_stats():
     ])
 
 @app.route("/cross-stats", methods=["GET"])
+@jwt_required()
 def cross_stats():
+
+    user_id = int(get_jwt_identity())
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -213,8 +260,9 @@ def cross_stats():
     cursor.execute("""
         SELECT risk_level, COUNT(*)
         FROM cross_verify_logs
+        WHERE user_id = %s
         GROUP BY risk_level
-    """)
+    """, (user_id,))
 
     rows = cursor.fetchall()
 
@@ -462,8 +510,10 @@ def search_gnews(query):
 
 #report download route 
 @app.route("/download-report", methods=["POST"])
+@jwt_required()
 def download_report():
     data = request.json
+    user_id = int(get_jwt_identity())
 
     pdf_buffer = generate_pdf(data)
 
@@ -502,9 +552,15 @@ def extract_pdf():
 # Prediction API
 # ----------------------------
 @app.route("/predict", methods=["POST"])
+@jwt_required()
 def predict():
+
+    user_id = int(get_jwt_identity())
+    print("Logged in User ID:", user_id)
+
     conn = get_db_connection()
     cursor = conn.cursor()
+   
 
     data = request.get_json()
     text = data.get("text", "")
@@ -528,10 +584,13 @@ def predict():
     prediction_label = "Fake" if prediction == 0 else "Real"
     confidence_val = float(confidence)
 
-    cursor.execute(
-    "INSERT INTO analysis_logs (input_text, prediction, confidence, created_at) VALUES (%s, %s, %s, NOW() AT TIME ZONE 'Asia/Kolkata')",
-    (text, prediction_label, confidence_val)
-)    
+    cursor.execute("""INSERT INTO analysis_logs(input_text,prediction,confidence,created_at,user_id)VALUES(%s,%s,%s,NOW() AT TIME ZONE 'Asia/Kolkata',%s)""",(
+text,
+prediction_label,
+confidence_val,
+user_id
+)
+)   
     conn.commit()
 
     cursor.close()
@@ -728,7 +787,9 @@ def extract_stylometric_features(cleaned):
 # AI Detection Route
 # ----------------------------
 @app.route("/ai-detect", methods=["POST"])
+@jwt_required()
 def ai_detect():
+    user_id = int(get_jwt_identity())
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -763,11 +824,40 @@ def ai_detect():
 
     result_label = "AI Generated" if prediction == 1 else "Human Written"
 
+    print("========== AI DETECT ==========")
+    print("JWT Identity:", get_jwt_identity())
+    print("User ID:", user_id)
+    print("Result:", result_label)
+    print("Confidence:", confidence)
+
     try:
         cursor.execute(
-    "INSERT INTO ai_detection_logs (input_text, result, confidence, created_at) VALUES (%s, %s, %s, NOW() AT TIME ZONE 'Asia/Kolkata')",
-    (text, result_label, confidence)
+"""
+INSERT INTO ai_detection_logs
+(
+input_text,
+result,
+confidence,
+created_at,
+user_id
 )
+VALUES
+(
+%s,
+%s,
+%s,
+NOW() AT TIME ZONE 'Asia/Kolkata',
+%s
+)
+""",
+(
+text,
+result_label,
+confidence,
+user_id
+)
+)
+    
         conn.commit()
     except Exception as e:
         print("DB Error:", e)
@@ -919,24 +1009,28 @@ def analyze_url():
     })
 
 @app.route("/chart-data", methods=["GET"])
+@jwt_required()
 def chart_data():
+    user_id = int(get_jwt_identity())
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # Get analysis logs (fake/real)
     cursor.execute("""
-        SELECT created_at, prediction
-        FROM analysis_logs
-        ORDER BY created_at ASC
-    """)
+SELECT created_at, prediction
+FROM analysis_logs
+WHERE user_id=%s
+ORDER BY created_at ASC
+""", (user_id,))
     analysis_rows = cursor.fetchall()
 
     # Get AI logs
     cursor.execute("""
-        SELECT created_at, result
-        FROM ai_detection_logs
-        ORDER BY created_at ASC
-    """)
+SELECT created_at, result
+FROM ai_detection_logs
+WHERE user_id=%s
+ORDER BY created_at ASC
+""", (user_id,))
     ai_rows = cursor.fetchall()
 
     cursor.close()
@@ -982,22 +1076,26 @@ def chart_data():
     return jsonify(data)
 
 @app.route("/table-data", methods=["GET"])
+@jwt_required()
 def table_data():
+    user_id = int(get_jwt_identity())
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # Fake / Real (analysis_logs)
     # analysis_logs
     cursor.execute("""
-    SELECT id, input_text, prediction, confidence, created_at
-    FROM analysis_logs
-""")
+SELECT id,input_text,prediction,confidence,created_at
+FROM analysis_logs
+WHERE user_id=%s
+""", (user_id,))
     analysis_rows = cursor.fetchall() 
     # ai_detection_logs
     cursor.execute("""
-    SELECT id, input_text, result, confidence, created_at
-    FROM ai_detection_logs
-""")
+SELECT id,input_text,result,confidence,created_at
+FROM ai_detection_logs
+WHERE user_id=%s
+""", (user_id,))
     ai_rows = cursor.fetchall()
 
     cursor.close()
@@ -1040,38 +1138,40 @@ def table_data():
     ])
 
 @app.route("/metrics", methods=["GET"])
+@jwt_required()
 def get_metrics():
+    user_id = int(get_jwt_identity())
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # counts
-    cursor.execute("SELECT COUNT(*) FROM analysis_logs")
+    cursor.execute("SELECT COUNT(*) FROM analysis_logs WHERE user_id=%s", (user_id,))
     analysis_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs")
+    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs WHERE user_id=%s", (user_id,))
     ai_count = cursor.fetchone()[0]
 
     total = analysis_count + ai_count
 
     # fake / real
-    cursor.execute("SELECT COUNT(*) FROM analysis_logs WHERE prediction='Fake'")
+    cursor.execute("SELECT COUNT(*) FROM analysis_logs WHERE prediction='Fake' AND user_id=%s", (user_id,))
     fake = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM analysis_logs WHERE prediction='Real'")
+    cursor.execute("SELECT COUNT(*) FROM analysis_logs WHERE prediction='Real' AND user_id=%s", (user_id,))
     real = cursor.fetchone()[0]
 
     # AI stats
-    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs WHERE result='AI Generated'")
+    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs WHERE result='AI Generated' AND user_id=%s", (user_id,))
     ai_generated = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs WHERE result='Human Written'")
+    cursor.execute("SELECT COUNT(*) FROM ai_detection_logs WHERE result='Human Written' AND user_id=%s", (user_id,))
     human_written = cursor.fetchone()[0]
 
     # accuracy
-    cursor.execute("SELECT AVG(confidence) FROM analysis_logs")
+    cursor.execute("SELECT AVG(confidence) FROM analysis_logs WHERE user_id=%s", (user_id,))
     analysis_avg = cursor.fetchone()[0] or 0
 
-    cursor.execute("SELECT AVG(confidence) FROM ai_detection_logs")
+    cursor.execute("SELECT AVG(confidence) FROM ai_detection_logs WHERE user_id=%s", (user_id,))
     ai_avg = cursor.fetchone()[0] or 0
 
     total_count = analysis_count + ai_count
@@ -1081,7 +1181,7 @@ def get_metrics():
         if total_count > 0 else 0
     )
 
-    cursor.execute("SELECT COUNT(*) FROM exported_reports")
+    cursor.execute("SELECT COUNT(*) FROM exported_reports WHERE user_id=%s", (user_id,))
     exported = cursor.fetchone()[0]
 
     cursor.close()
@@ -1107,7 +1207,9 @@ def get_metrics():
     })
 
 @app.route("/exports", methods=["GET"])
+@jwt_required()
 def get_exports():
+    user_id = int(get_jwt_identity())
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -1115,8 +1217,9 @@ def get_exports():
         SELECT e.id, e.report_id, e.type, e.created_at, a.input_text
         FROM exported_reports e
         JOIN analysis_logs a ON e.report_id = a.id
+        WHERE e.user_id = %s
         ORDER BY e.created_at DESC
-    """)
+    """, (user_id,))
 
     rows = cursor.fetchall()
 
@@ -1135,26 +1238,36 @@ def get_exports():
     ])
 
 @app.route("/download-report/<int:id>")
+@jwt_required()
 def download_report_by_id(id):
+    user_id = int(get_jwt_identity())
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # 🔥 Fetch data
-    cursor.execute(
-        "SELECT input_text, prediction, confidence FROM analysis_logs WHERE id=%s",
-        (id,)
-    )
+    cursor.execute("""
+SELECT
+input_text,
+prediction,
+confidence
+FROM analysis_logs
+WHERE id=%s
+AND user_id=%s
+""", (id, user_id))
     row = cursor.fetchone()
 
     if not row:
+        cursor.close()
+        conn.close()
         return "Not found", 404
 
     text, prediction, confidence = row
 
     # SAVE EXPORT
     cursor.execute(
-    "INSERT INTO exported_reports (report_id, type) VALUES (%s, %s)",
-    (id, prediction) 
+        "INSERT INTO exported_reports (report_id, type, user_id) VALUES (%s, %s, %s)",
+        (id, prediction, user_id)
     )
     conn.commit()
 

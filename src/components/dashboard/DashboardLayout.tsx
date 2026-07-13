@@ -4,6 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BookOpen, Brain, Moon, Search, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { User, LogOut } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface Props {
   children: ReactNode;
@@ -29,6 +37,11 @@ export function DashboardLayout({
 }: Props) {
   const navigate = useNavigate();
   const [isDark, setIsDark] = useState(false);
+  const {
+    user,
+    isAuthenticated,
+    logout,
+  } = useAuth();
 
   useEffect(() => {
     if (isDark) {
@@ -80,32 +93,80 @@ export function DashboardLayout({
             </SelectContent>
           </Select>
           <Button
-                variant="hero-outline"
-                onClick={() => navigate("/")}
-                size="sm"
-                className="h-9 text-xs sm:text-sm px-2.5 sm:px-3"
-              >
-                <BookOpen className="w-5 h-5" />
-                <span className="hidden sm:inline">Back to Fake News Detector</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
+            variant="hero-outline"
+            onClick={() => navigate("/")}
+            size="sm"
+            className="h-9 text-xs sm:text-sm px-2.5 sm:px-3"
+          >
+            <BookOpen className="w-5 h-5" />
+            <span className="hidden sm:inline">Back to Fake News Detector</span>
+            <span className="sm:hidden">Back</span>
+          </Button>
           <Button
-                onClick={() => navigate("/ai-detector")}
-                size="sm"
-                className="h-9 text-xs sm:text-sm px-2.5 sm:px-3"
-              >
-                <span className="hidden sm:inline">Back to AI Detector</span>
-                <span className="sm:hidden">AI</span>
-              </Button>
+            onClick={() => navigate("/ai-detector")}
+            size="sm"
+            className="h-9 text-xs sm:text-sm px-2.5 sm:px-3"
+          >
+            <span className="hidden sm:inline">Back to AI Detector</span>
+            <span className="sm:hidden">AI</span>
+          </Button>
+          {isAuthenticated && (
+            <DropdownMenu>
+
+              <DropdownMenuTrigger asChild>
+
+                <Button
+                  variant="outline"
+                  className="hidden md:flex items-center gap-2 rounded-xl px-3 h-10"
+                >
+                  <User className="w-4 h-4" />
+
+                  <div className="flex flex-col items-start leading-none">
+
+                    <span className="text-[10px] text-muted-foreground">
+                      Welcome
+                    </span>
+
+                    <span className="text-sm font-semibold">
+                      {user?.name}
+                    </span>
+
+                  </div>
+
+                </Button>
+
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end">
+
+                <DropdownMenuItem
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="text-red-500"
+                  onClick={logout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+
+              </DropdownMenuContent>
+
+            </DropdownMenu>
+          )}
           <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsDark((prev) => !prev)}
-                className="h-9 w-9 rounded-full border border-primary/20 bg-white/60 dark:bg-slate-900/70 dark:border-slate-700"
-              >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </Button>
-          
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsDark((prev) => !prev)}
+            className="h-9 w-9 rounded-full border border-primary/20 bg-white/60 dark:bg-slate-900/70 dark:border-slate-700"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
+
         </div>
       </header>
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 relative z-10 animate-in fade-in duration-1000">{children}</main>

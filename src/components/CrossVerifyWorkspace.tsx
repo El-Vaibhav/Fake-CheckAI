@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import api from "@/api/api";
 import {
     Upload,
     Search,
@@ -34,16 +35,11 @@ export function CrossVerifyWorkspace() {
         setResult(null);
 
         try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/cross-verify`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ text }),
-                }
-            );
+            const { data } = await api.post("/cross-verify", {
+                text,
+            });
 
-            const data = await response.json();
+
             setResult(data);
         } catch (error) {
             console.error("Cross Verify Error:", error);
@@ -76,15 +72,15 @@ export function CrossVerifyWorkspace() {
             formData.append("file", file);
 
             try {
-                const response = await fetch(
-                    `${import.meta.env.VITE_API_BASE_URL}/extract-pdf`,
+                const { data } = await api.post(
+                    "/extract-pdf",
+                    formData,
                     {
-                        method: "POST",
-                        body: formData,
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
                     }
                 );
-
-                const data = await response.json();
 
                 if (data.text) {
                     setText(data.text.slice(0, maxChars));
@@ -120,15 +116,15 @@ export function CrossVerifyWorkspace() {
             formData.append("file", file);
 
             try {
-                const response = await fetch(
-                    `${import.meta.env.VITE_API_BASE_URL}/extract-pdf`,
+                const { data } = await api.post(
+                    "/extract-pdf",
+                    formData,
                     {
-                        method: "POST",
-                        body: formData,
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
                     }
                 );
-
-                const data = await response.json();
 
                 if (data.text) {
                     setText(data.text.slice(0, maxChars));
@@ -161,16 +157,15 @@ export function CrossVerifyWorkspace() {
         };
 
         try {
-            const response = await fetch(
-                `${import.meta.env.VITE_API_BASE_URL}/download-report`,
+            const response = await api.post(
+                "/download-report",
+                reportPayload,
                 {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(reportPayload),
+                    responseType: "blob",
                 }
             );
 
-            const blob = await response.blob();
+            const blob = response.data;
             const url = window.URL.createObjectURL(blob);
 
             const a = document.createElement("a");
@@ -394,7 +389,7 @@ export function CrossVerifyWorkspace() {
                                     Download Verification Report
                                 </Button>
                             </div>
-                            
+
                             {/* SOURCE CARDS */}
                             <div className="space-y-10">
                                 {(result?.sources || []).map((source: any, index: number) => {

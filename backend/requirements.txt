@@ -21,3 +21,7 @@ readability-lxml
 psycopg2-binary
 python-dotenv
 urllib3
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+Flask-JWT-Extended
