@@ -5,6 +5,13 @@ import { useAuth } from "@/hooks/useAuth";
 
 export function HeroSection() {
   const navigate = useNavigate();
+  const { continueAsGuest } = useAuth();
+
+  const handleContinueAsGuest = () => {
+    continueAsGuest();
+    navigate("/app");
+  };
+
   return (
     <section
       id="home"
@@ -64,7 +71,6 @@ export function HeroSection() {
               >
                 Open Analytics Dashboard
               </Button>
-
 
               <Button
                 variant="hero-outline"
