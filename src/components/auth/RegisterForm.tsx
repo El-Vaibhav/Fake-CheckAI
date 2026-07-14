@@ -5,15 +5,23 @@ import { z } from "zod";
 import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { Eye, EyeOff, Loader2, Lock, Mail, User, UserPlus } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+  User,
+  UserPlus,
+} from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { useToast } from "@/hooks/use-toast";
+import { GoogleLogin } from "@react-oauth/google";
 
 const registerSchema = z
   .object({
@@ -31,7 +39,10 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterForm() {
   const navigate = useNavigate();
-  const { register: registerUser } = useAuth();
+  const {
+    register: registerUser,
+    registerWithGoogle,
+  } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -123,6 +134,56 @@ export default function RegisterForm() {
           </>
         )}
       </Button>
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={async (credentialResponse) => {
+            try {
+              setLoading(true);
+
+              await registerWithGoogle(
+                credentialResponse.credential!
+              );
+
+              toast({
+                title: "Registration Successful",
+                description: "Welcome to FakeCheck AI!",
+              });
+
+              navigate("/app");
+            } catch (error: unknown) {
+              toast({
+                variant: "destructive",
+                title: "Registration Failed",
+                description: getApiErrorMessage(
+                  error,
+                  "Unable to register with Google."
+                ),
+              });
+            } finally {
+              setLoading(false);
+            }
+          }}
+          onError={() => {
+            toast({
+              variant: "destructive",
+              title: "Google Registration Failed",
+              description: "Unable to authenticate with Google.",
+            });
+          }}
+        />
+      </div>
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?

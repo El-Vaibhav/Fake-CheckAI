@@ -23,6 +23,29 @@ auth_bp = Blueprint("auth", __name__)
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
 
+# -------------------------
+# Verify Google Token
+# -------------------------
+def verify_google_credential(credential):
+
+    try:
+
+        idinfo = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            VITE_GOOGLE_CLIENT_ID
+        )
+
+        return {
+            "google_id": idinfo["sub"],
+            "email": idinfo["email"],
+            "name": idinfo.get("name", ""),
+            "picture": idinfo.get("picture", "")
+        }
+
+    except Exception as e:
+        raise Exception(str(e))
+
 
 # -------------------------
 # Register
@@ -38,7 +61,7 @@ def register():
 
     if not name or not email or not password:
         return jsonify({
-            "error": "All fields are required"
+            "message": "All fields are required"
         }), 400
 
     conn = get_db_connection()
@@ -55,7 +78,7 @@ def register():
         conn.close()
 
         return jsonify({
-            "error": "Email already exists"
+            "message": "Email already exists"
         }), 409
 
     hashed = hash_password(password)
@@ -128,7 +151,7 @@ def login():
 
     if not user:
         return jsonify({
-            "error": "Invalid credentials"
+            "message": "Invalid credentials"
         }), 401
 
     user_id, name, email, hashed = user
@@ -136,7 +159,7 @@ def login():
     if not verify_password(password, hashed):
 
         return jsonify({
-            "error": "Invalid credentials"
+            "message": "Invalid credentials"
         }), 401
 
     token = create_access_token(identity=str(user_id))
@@ -160,28 +183,24 @@ def google_login():
 
     if not credential:
         return jsonify({
-            "error": "Google credential missing"
+            "message": "Google credential missing"
         }), 400
 
     try:
 
-        idinfo = id_token.verify_oauth2_token(
-            credential,
-            google_requests.Request(),
-            VITE_GOOGLE_CLIENT_ID
-        )
+        user_info = verify_google_credential(credential)
 
     except Exception as e:
      print("Google verification error:", repr(e))
 
      return jsonify({
-        "error": str(e)
+        "message": str(e)
     }), 401
 
-    google_id = idinfo["sub"]
-    email = idinfo["email"]
-    name = idinfo.get("name", "")
-    picture = idinfo.get("picture", "")
+    google_id = user_info["google_id"]
+    email = user_info["email"]
+    name = user_info.get("name", "")
+    picture = user_info.get("picture", "")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -227,37 +246,12 @@ def google_login():
 
     else:
 
-        cursor.execute(
-            """
-            INSERT INTO users
-            (
-                full_name,
-                email,
-                google_id,
-                provider,
-                profile_picture
-            )
-            VALUES
-            (
-                %s,
-                %s,
-                %s,
-                'google',
-                %s
-            )
-            RETURNING id
-            """,
-            (
-                name,
-                email,
-                google_id,
-                picture
-            )
-        )
+     cursor.close()
+     conn.close()
 
-        user_id = cursor.fetchone()[0]
-
-        conn.commit()
+     return jsonify({
+        "message": "Account not found. Please register first."
+    }), 404
 
     cursor.close()
     conn.close()
@@ -276,6 +270,111 @@ def google_login():
         }
     })
 
+# -------------------------
+# Google Register
+# -------------------------
+@auth_bp.route("/google-register", methods=["POST"])
+def google_register():
+
+    data = request.get_json()
+
+    credential = data.get("credential")
+
+    if not credential:
+        return jsonify({
+            "message": "Google credential missing"
+        }), 400
+
+    try:
+        user_info = verify_google_credential(credential)
+
+    except Exception as e:
+        return jsonify({
+            "message": str(e)
+        }), 401
+
+    google_id = user_info["google_id"]
+    email = user_info["email"]
+    name = user_info["name"]
+    picture = user_info["picture"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # -------------------------
+    # Already registered?
+    # -------------------------
+    cursor.execute(
+        """
+        SELECT id
+        FROM users
+        WHERE email=%s
+        """,
+        (email,)
+    )
+
+    user = cursor.fetchone()
+
+    if user:
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "message": "Account already exists. Please login."
+        }), 409
+
+    # -------------------------
+    # Create new Google user
+    # -------------------------
+    cursor.execute(
+        """
+        INSERT INTO users
+        (
+            full_name,
+            email,
+            google_id,
+            provider,
+            profile_picture
+        )
+        VALUES
+        (
+            %s,
+            %s,
+            %s,
+            'google',
+            %s
+        )
+        RETURNING id
+        """,
+        (
+            name,
+            email,
+            google_id,
+            picture
+        )
+    )
+
+    user_id = cursor.fetchone()[0]
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    token = create_access_token(identity=str(user_id))
+
+    return jsonify({
+        "message": "Google registration successful",
+        "token": token,
+        "user": {
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "provider": "google",
+            "profile_picture": picture
+        }
+    })
 
 # -------------------------
 # Current User
@@ -308,7 +407,7 @@ def me():
 
     if not user:
         return jsonify({
-            "error": "User not found"
+            "message": "User not found"
         }), 404
 
     return jsonify({

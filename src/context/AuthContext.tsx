@@ -111,6 +111,22 @@ export function AuthProvider({ children }: Props) {
   }
 
   // ===========================
+  // GOOGLE REGISTER
+  // ===========================
+  async function registerWithGoogle(
+    credential: string
+  ) {
+    const response = await api.post<AuthResponse>(
+      "/google-register",
+      {
+        credential,
+      }
+    );
+
+    setAuth(response.data);
+  }
+
+  // ===========================
   // LOGOUT
   // ===========================
   function logout() {
@@ -133,7 +149,10 @@ export function AuthProvider({ children }: Props) {
 
         login,
         loginWithGoogle,
+
         register,
+        registerWithGoogle,
+
         logout,
       }}
     >

@@ -25,6 +25,8 @@ export interface AuthResponse {
   user: User;
 }
 
+
+
 export interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -33,8 +35,12 @@ export interface AuthContextType {
 
   login: (email: string, password: string) => Promise<void>;
 
+  registerWithGoogle: (
+  credential: string
+) => Promise<void>;
+
   loginWithGoogle: (
-  code: string
+  credential: string
 ) => Promise<void>;
 
   register: (
