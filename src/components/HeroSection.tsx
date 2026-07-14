@@ -1,6 +1,7 @@
 import { ArrowRight, Search, BookOpen, Shield, Zap, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export function HeroSection() {
   const navigate = useNavigate();
@@ -66,6 +67,15 @@ export function HeroSection() {
 
 
               <Button
+                variant="hero-outline"
+                size="lg"
+                className="w-full min-h-14 py-3 text-center whitespace-normal leading-snug"
+                onClick={handleContinueAsGuest}
+              >
+                Continue as Guest
+              </Button>
+
+              <Button
                 variant="hero"
                 size="lg"
                 className="w-full min-h-14 py-3 text-center whitespace-normal leading-snug"
@@ -86,6 +96,10 @@ export function HeroSection() {
                 </span>
               </Button>
             </div>
+
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground animate-fade-in-up animation-delay-300 mx-auto lg:mx-0">
+              Guest mode lets you try FakeCheck AI without logging in. Your information will not be recorded, so analytics and saved history are not available as a guest.
+            </p>
 
 
             {/* Stats */}
