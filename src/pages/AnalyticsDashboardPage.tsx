@@ -692,82 +692,84 @@ export default function AnalyticsDashboardPage() {
         <CardHeader>
           <CardTitle>Saved Reports & Exports</CardTitle>
         </CardHeader>
-        <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90 space-y-3">
-          {savedExports.map((item) => (
-            <div
-              key={item.id}
-              className="border dark:border-slate-800 rounded-xl p-3 bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70 flex flex-col sm:flex-row sm:items-center gap-2 justify-between overflow-hidden"
-            >
-              <div className="min-w-0">
-                <p className="font-medium break-words">
-                  {(
-                    item.text
-                      ?.slice(0, 50)
-                      .replace(/[^\w\s]/gi, "") // remove special chars
-                      .trim()
-                      .replace(/\s+/g, "_") // spaces → underscore
-                  ) || "report"} .pdf
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(item.date).toLocaleString()}
-                </p>
-              </div>
+        <CardContent className="bg-gradient-to-br from-cyan-100/70 via-blue-100/70 to-purple-100/70 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-[#10162d]/90">
+          <div className="max-h-[392px] space-y-3 overflow-y-auto pr-2">
+            {savedExports.map((item) => (
+              <div
+                key={item.id}
+                className="border dark:border-slate-800 rounded-xl p-3 bg-gradient-to-br from-cyan-100/85 via-blue-100/85 to-purple-100/85 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/70 flex flex-col sm:flex-row sm:items-center gap-2 justify-between overflow-hidden"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium break-words">
+                    {(
+                      item.text
+                        ?.slice(0, 50)
+                        .replace(/[^\w\s]/gi, "") // remove special chars
+                        .trim()
+                        .replace(/\s+/g, "_") // spaces → underscore
+                    ) || "report"} .pdf
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(item.date).toLocaleString()}
+                  </p>
+                </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge className="uppercase">{item.type}</Badge>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className="uppercase">{item.type}</Badge>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={async () => {
-                    try {
-                      const response = await api.get(
-                        `/download-report/${item.report_id}`,
-                        {
-                          responseType: "blob",
-                        }
-                      );
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const response = await api.get(
+                          `/download-report/${item.report_id}`,
+                          {
+                            responseType: "blob",
+                          }
+                        );
 
-                      const blob = new Blob([response.data], {
-                        type: "application/pdf",
-                      });
+                        const blob = new Blob([response.data], {
+                          type: "application/pdf",
+                        });
 
-                      const url = window.URL.createObjectURL(blob);
+                        const url = window.URL.createObjectURL(blob);
 
-                      const link = document.createElement("a");
-                      link.href = url;
+                        const link = document.createElement("a");
+                        link.href = url;
 
-                      link.download = `${item.text
+                        link.download = `${item.text
                           ?.slice(0, 40)
                           .replace(/[^\w\s]/g, "")
                           .replace(/\s+/g, "_") || "report"
                         }.pdf`;
 
-                      document.body.appendChild(link);
-                      link.click();
+                        document.body.appendChild(link);
+                        link.click();
 
-                      document.body.removeChild(link);
-                      window.URL.revokeObjectURL(url);
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
 
-                      toast.success("Report downloaded successfully");
+                        toast.success("Report downloaded successfully");
 
-                    } catch (error: any) {
-                      console.error("Download error:", error);
+                      } catch (error: any) {
+                        console.error("Download error:", error);
 
-                      if (error.response) {
-                        console.log("Status:", error.response.status);
-                        console.log("Data:", error.response.data);
+                        if (error.response) {
+                          console.log("Status:", error.response.status);
+                          console.log("Data:", error.response.data);
+                        }
+
+                        toast.error("Failed to download report");
                       }
-
-                      toast.error("Failed to download report");
-                    }
-                  }}
-                >
-                  Download
-                </Button>
+                    }}
+                  >
+                    Download
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
           {savedExports.length === 0 && <p className="text-sm text-muted-foreground">No exported PDFs yet.</p>}
         </CardContent>
       </Card>
