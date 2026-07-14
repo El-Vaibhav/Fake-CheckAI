@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 
 export function HeroSection() {
   const navigate = useNavigate();
-
   return (
     <section
       id="home"
@@ -64,6 +63,7 @@ export function HeroSection() {
               >
                 Open Analytics Dashboard
               </Button>
+
 
               <Button
                 variant="hero"
