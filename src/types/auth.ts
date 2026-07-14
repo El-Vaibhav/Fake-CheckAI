@@ -32,9 +32,6 @@ export interface AuthContextType {
   token: string | null;
   loading: boolean;
   isAuthenticated: boolean;
-  isGuest: boolean;
-
-  continueAsGuest: () => void;
 
   login: (email: string, password: string) => Promise<void>;
 

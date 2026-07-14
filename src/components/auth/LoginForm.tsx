@@ -28,7 +28,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle, continueAsGuest } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,15 +40,6 @@ export default function LoginForm() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
-
-  function handleContinueAsGuest() {
-    continueAsGuest();
-    toast({
-      title: "Continuing as guest",
-      description: "You can try the website, but analytics and saved history are unavailable in guest mode.",
-    });
-    navigate("/app");
-  }
 
   async function onSubmit(values: LoginFormValues) {
     try {
@@ -131,15 +122,6 @@ export default function LoginForm() {
           </>
         )}
       </Button>
-      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center">
-        <Button type="button" className="w-full" variant="hero-outline" size="lg" onClick={handleContinueAsGuest}>
-          Continue as Guest
-        </Button>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Guest mode lets you try the website without logging in. Your information will not be recorded, so analytics and saved history cannot be done as a guest.
-        </p>
-      </div>
-
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />

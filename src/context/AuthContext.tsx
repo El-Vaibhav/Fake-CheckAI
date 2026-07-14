@@ -27,10 +27,6 @@ export function AuthProvider({ children }: Props) {
     localStorage.getItem("token")
   );
 
-  const [isGuest, setIsGuest] = useState(
-    localStorage.getItem("guestMode") === "true"
-  );
-
   const [loading, setLoading] = useState(true);
 
   // ===========================
@@ -42,11 +38,9 @@ export function AuthProvider({ children }: Props) {
       "user",
       JSON.stringify(data.user)
     );
-    localStorage.removeItem("guestMode");
 
     setToken(data.token);
     setUser(data.user);
-    setIsGuest(false);
   }
 
   useEffect(() => {
@@ -58,25 +52,6 @@ export function AuthProvider({ children }: Props) {
 
     setLoading(false);
   }, []);
-
-  // ===========================
-  // GUEST MODE
-  // ===========================
-  function continueAsGuest() {
-    localStorage.removeItem("token");
-    localStorage.setItem("guestMode", "true");
-
-    const guestUser: User = {
-      id: 0,
-      name: "Guest",
-      email: "guest@fakecheck.ai",
-    };
-
-    localStorage.setItem("user", JSON.stringify(guestUser));
-    setToken(null);
-    setUser(guestUser);
-    setIsGuest(true);
-  }
 
   // ===========================
   // LOGIN
@@ -157,11 +132,9 @@ export function AuthProvider({ children }: Props) {
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    localStorage.removeItem("guestMode");
 
     setUser(null);
     setToken(null);
-    setIsGuest(false);
 
     window.location.href = "/";
   }
@@ -172,10 +145,7 @@ export function AuthProvider({ children }: Props) {
         user,
         token,
         loading,
-        isAuthenticated: !!token || isGuest,
-        isGuest,
-
-        continueAsGuest,
+        isAuthenticated: !!token,
 
         login,
         loginWithGoogle,

@@ -29,7 +29,6 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router";
 import api from "@/api/api";
-import { useAuth } from "@/hooks/useAuth";
 
 const pieColors = {
   "Real News": "#22c55e",   // green
@@ -93,8 +92,6 @@ const formatTrend = (current: number, previous: number) => {
 const isPositiveTrend = (trend: string) => !trend.startsWith("-");
 
 export default function AnalyticsDashboardPage() {
-  const { isGuest } = useAuth();
-  const navigate = useNavigate();
   const [data, setData] = useState<DashboardReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<DashboardReport | null>(null);
   const [compareList, setCompareList] = useState<DashboardReport[]>([]);
@@ -129,35 +126,20 @@ export default function AnalyticsDashboardPage() {
   });
 
   useEffect(() => {
-    if (isGuest) {
-      setLoadingState((prev) => ({ ...prev, source: false }));
-      return;
-    }
-
     api.get("/source-wise-stats")
       .then(res => setSourceData(res.data))
       .catch(err => console.error(err))
       .finally(() => setLoadingState((prev) => ({ ...prev, source: false })));
-  }, [isGuest]);
+  }, []);
 
   useEffect(() => {
-    if (isGuest) {
-      setLoadingState((prev) => ({ ...prev, exports: false }));
-      return;
-    }
-
     api.get("/exports")
       .then(res => setExports(res.data))
       .catch(err => console.error("Export fetch error:", err))
       .finally(() => setLoadingState((prev) => ({ ...prev, exports: false })));
-  }, [isGuest]);
+  }, []);
 
   useEffect(() => {
-    if (isGuest) {
-      setLoadingState((prev) => ({ ...prev, chart: false }));
-      return;
-    }
-
     api.get("/chart-data")
       .then((res) => {
         setChartData(res.data);
@@ -166,14 +148,9 @@ export default function AnalyticsDashboardPage() {
       .finally(() =>
         setLoadingState(prev => ({ ...prev, chart: false }))
       );
-  }, [isGuest]);
+  }, []);
 
   useEffect(() => {
-    if (isGuest) {
-      setLoadingState((prev) => ({ ...prev, table: false }));
-      return;
-    }
-
     api.get("/table-data")
       .then(res => res.data)
       .then(apiData => {
@@ -231,14 +208,9 @@ export default function AnalyticsDashboardPage() {
       })
       .catch(err => console.error("Error fetching table data:", err))
       .finally(() => setLoadingState((prev) => ({ ...prev, table: false })));
-  }, [isGuest]);
+  }, []);
 
   useEffect(() => {
-    if (isGuest) {
-      setLoadingState((prev) => ({ ...prev, metrics: false }));
-      return;
-    }
-
     api.get("/metrics")
       .then(res => res.data)
       .then(data => {
@@ -262,7 +234,7 @@ export default function AnalyticsDashboardPage() {
       })
       .catch(err => console.error("Metrics error:", err))
       .finally(() => setLoadingState((prev) => ({ ...prev, metrics: false })));
-  }, [isGuest]);
+  }, []);
 
   const dateFilteredData = useMemo(() => {
     if (dateFilter === "alltime") return data;
@@ -322,6 +294,8 @@ export default function AnalyticsDashboardPage() {
       return [...prev, enrichedReport];
     });
   };
+  const navigate = useNavigate();
+
   const savedExports = useMemo(() => {
     if (dateFilter === "alltime") return exports;
 
@@ -486,33 +460,6 @@ export default function AnalyticsDashboardPage() {
 
     return aggregateTrendByMode(baseRows);
   }, [filteredData, chartData, typeFilter, aggregateTrendByMode]);
-
-  if (isGuest) {
-    return (
-      <DashboardLayout>
-        <div className="flex min-h-[60vh] items-center justify-center px-4">
-          <Card className="max-w-2xl border-primary/20 bg-primary/5 text-center shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-3xl">Analytics unavailable in guest mode</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <p className="text-muted-foreground">
-                You can still try FakeCheck AI as a guest, but your information will not be recorded. Because no guest activity is saved, analytics and history cannot be generated in guest mode.
-              </p>
-              <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                <Button variant="hero" onClick={() => navigate("/#detect")}>
-                  Try news detection
-                </Button>
-                <Button variant="outline" onClick={() => navigate("/login")}>
-                  Login to save analytics
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout
