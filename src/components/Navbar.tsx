@@ -31,7 +31,14 @@ export function Navbar() {
     user,
     logout,
     isAuthenticated,
+    continueAsGuest,
   } = useAuth();
+
+  const handleContinueAsGuest = () => {
+    continueAsGuest();
+    navigate("/app");
+    setIsMobileMenuOpen(false);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -112,6 +119,14 @@ export function Navbar() {
 
             {!isAuthenticated ? (
               <div className="hidden sm:flex items-center gap-2">
+
+                <Button
+                  variant="hero-outline"
+                  onClick={handleContinueAsGuest}
+                  title="Try the website as a guest. Guest info is not recorded, so analytics are unavailable."
+                >
+                  Continue as Guest
+                </Button>
 
                 <Button
                   variant="outline"
@@ -210,6 +225,19 @@ export function Navbar() {
             <a href="#detect" onClick={() => setIsMobileMenuOpen(false)}>
               {!isAuthenticated ? (
                 <div className="space-y-2">
+
+                  <Button
+                    className="w-full"
+                    variant="hero-outline"
+                    onClick={handleContinueAsGuest}
+                    title="Try the website as a guest. Guest info is not recorded, so analytics are unavailable."
+                  >
+                    Continue as Guest
+                  </Button>
+
+                  <p className="px-2 text-center text-xs leading-5 text-muted-foreground">
+                    Guest info is not recorded, so analytics are unavailable.
+                  </p>
 
                   <Button
                     className="w-full"
