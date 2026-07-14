@@ -29,29 +29,35 @@ export function AuthProvider({ children }: Props) {
 
   const [loading, setLoading] = useState(true);
 
+  const [isGuest, setIsGuest] = useState(
+    localStorage.getItem("guest") === "true"
+  );
+
   // ===========================
   // SET AUTH STATE
   // ===========================
   function setAuth(data: AuthResponse) {
+    localStorage.removeItem("guest");
+    setIsGuest(false);
+
     localStorage.setItem("token", data.token);
-    localStorage.setItem(
-      "user",
-      JSON.stringify(data.user)
-    );
+    localStorage.setItem("user", JSON.stringify(data.user));
 
     setToken(data.token);
     setUser(data.user);
   }
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+  const storedUser = localStorage.getItem("user");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
 
-    setLoading(false);
-  }, []);
+  setIsGuest(localStorage.getItem("guest") === "true");
+
+  setLoading(false);
+}, []);
 
   // ===========================
   // LOGIN
@@ -132,9 +138,11 @@ export function AuthProvider({ children }: Props) {
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("guest");
 
     setUser(null);
     setToken(null);
+    setIsGuest(false);
 
     window.location.href = "/";
   }

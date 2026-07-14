@@ -32,6 +32,7 @@ export function AiNavbar() {
     logout,
     isAuthenticated,
   } = useAuth();
+  const isGuest = localStorage.getItem("guest") === "true";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,11 +71,15 @@ export function AiNavbar() {
               <span className="text-[10px] text-muted-foreground leading-tight hidden sm:block">
                 AI-Generated Content Detection
               </span>
-              {isAuthenticated && (
+              {isAuthenticated ? (
                 <span className="text-xs text-primary font-medium">
                   Welcome, {user?.name}
                 </span>
-              )}
+              ) : isGuest ? (
+                <span className="text-xs text-primary font-medium">
+                  Guest Mode
+                </span>
+              ) : null}
             </div>
           </a>
 
@@ -130,7 +135,7 @@ export function AiNavbar() {
               </Button>
             </a>
 
-            {!isAuthenticated ? (
+            {!isAuthenticated && !isGuest ? (
               <div className="hidden sm:flex items-center gap-2">
 
                 <Button
@@ -148,7 +153,31 @@ export function AiNavbar() {
                 </Button>
 
               </div>
+            ) : isGuest ? (
+
+              <div className="hidden sm:flex items-center gap-2">
+
+                <Button
+                  variant="secondary"
+                  disabled
+                >
+                  👤 Guest
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    localStorage.removeItem("guest");
+                    navigate("/login");
+                  }}
+                >
+                  Login
+                </Button>
+
+              </div>
+
             ) : (
+
               <div className="hidden sm:flex items-center gap-2">
 
                 <Button
@@ -234,7 +263,7 @@ export function AiNavbar() {
 
           <div className="pt-2">
 
-            {!isAuthenticated ? (
+            {!isAuthenticated && !isGuest ? (
               <>
                 <Button
                   variant="outline"
@@ -258,6 +287,30 @@ export function AiNavbar() {
                   Register
                 </Button>
               </>
+            ) : isGuest ? (
+
+              <>
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  disabled
+                >
+                  👤 Guest Mode
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    localStorage.removeItem("guest");
+                    navigate("/login");
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Login
+                </Button>
+              </>
+
             ) : (
               <>
                 <Button

@@ -295,7 +295,7 @@ export default function AnalyticsDashboardPage() {
     });
   };
   const navigate = useNavigate();
-
+  const isGuest = localStorage.getItem("guest") === "true";
   const savedExports = useMemo(() => {
     if (dateFilter === "alltime") return exports;
 
@@ -460,6 +460,101 @@ export default function AnalyticsDashboardPage() {
 
     return aggregateTrendByMode(baseRows);
   }, [filteredData, chartData, typeFilter, aggregateTrendByMode]);
+  if (isGuest) {
+    return (
+      <DashboardLayout
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        dateFilter={dateFilter}
+        setDateFilter={setDateFilter}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+      >
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <Card className="w-full max-w-3xl rounded-2xl border-primary/20 shadow-xl">
+            <CardHeader className="text-center space-y-2">
+              <CardTitle className="text-3xl font-bold">
+                Personalized Analytics
+              </CardTitle>
+
+              <p className="text-muted-foreground text-base">
+                You are currently using <span className="font-semibold">Guest Mode</span>.
+              </p>
+            </CardHeader>
+
+            <CardContent className="space-y-8">
+
+              <p className="text-center text-muted-foreground leading-7">
+                Detection features are fully available in Guest Mode, but analyses
+                are not stored. Sign in to unlock your personalized dashboard and
+                access all saved insights.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-4">
+
+                <div className="rounded-xl border p-4">
+                  <h3 className="font-semibold mb-2">
+                    Available after Login
+                  </h3>
+
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Analysis History</li>
+                    <li>• Personalized Dashboard</li>
+                    <li>• Interactive Analytics</li>
+                    <li>• Export Reports</li>
+                    <li>• AI Detection History</li>
+                    <li>• Cross Verification History</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-xl border p-4 bg-muted/20">
+                  <h3 className="font-semibold mb-2">
+                    Current Guest Access
+                  </h3>
+
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Fake News Detection</li>
+                    <li>• AI Content Detection</li>
+                    <li>• Cross Verification</li>
+                    <li>• PDF & URL Analysis</li>
+                    <li>• Real-time Predictions</li>
+                    <li>• No Account Required</li>
+                  </ul>
+                </div>
+
+              </div>
+
+              <div className="flex justify-center gap-4">
+
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    localStorage.removeItem("guest");
+                    navigate("/login");
+                  }}
+                >
+                  Login
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    localStorage.removeItem("guest");
+                    navigate("/register");
+                  }}
+                >
+                  Create Account
+                </Button>
+
+              </div>
+
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout
@@ -742,7 +837,7 @@ export default function AnalyticsDashboardPage() {
                           ?.slice(0, 40)
                           .replace(/[^\w\s]/g, "")
                           .replace(/\s+/g, "_") || "report"
-                        }.pdf`;
+                          }.pdf`;
 
                         document.body.appendChild(link);
                         link.click();

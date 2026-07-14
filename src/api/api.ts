@@ -29,11 +29,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
-    }
+    api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const isGuest = localStorage.getItem("guest") === "true";
+
+        if (error.response?.status === 401 && !isGuest) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+
+          window.location.href = "/login";
+        }
+
+        return Promise.reject(error);
+      }
+    );
 
     return Promise.reject(error);
   }

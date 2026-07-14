@@ -3,7 +3,8 @@ from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager,
     jwt_required,
-    get_jwt_identity
+    get_jwt_identity,
+    verify_jwt_in_request
 )
 from auth import auth_bp
 import joblib
@@ -96,21 +97,29 @@ GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
 from collections import Counter
 
 @app.route("/cross-verify", methods=["POST"])
-@jwt_required()
 def cross_verify():
-    user_id = int(get_jwt_identity())
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    # JWT is OPTIONAL
+    verify_jwt_in_request(optional=True)
 
-    data = request.json
-    user_text = data.get("text")
+    identity = get_jwt_identity()
+    user_id = int(identity) if identity else None
+
+    data = request.get_json()
+
+    print("========== CROSS VERIFY REQUEST ==========")
+    print("Received JSON:", data)
+
+    user_text = data.get("text") if data else None
+
+    print("Received text:", repr(user_text))
+    print("Length:", len(user_text.strip()) if user_text else 0)
 
     if not user_text or len(user_text.strip()) < 20:
-        return jsonify({"error": "Invalid or empty text"}), 400
+     return jsonify({"error": "Invalid or empty text"}), 400
 
     try:
-        # run similarity check
+        # Run similarity check
         result = check_web_similarity(user_text)
 
         highest_similarity = result.get("highest_similarity", 0)
@@ -119,55 +128,56 @@ def cross_verify():
         sources = result.get("sources", [])
         total_sources = len(sources)
 
-        # =========================
-        # ✅ PICK TOP MATCH SOURCE
-        # =========================
         if sources:
             selected_source = sources[0].get("source_type", "Blogs")
         else:
             selected_source = "Unknown"
 
         print("========== CROSS VERIFY ==========")
-        print("JWT Identity:", get_jwt_identity())
         print("User ID:", user_id)
         print("Selected Source:", selected_source)
 
-        # =========================
-        # ✅ INSERT INTO DATABASE
-        # =========================
-        cursor.execute("""
-INSERT INTO cross_verify_logs
-(
-input_text,
-highest_similarity,
-risk_level,
-total_sources,
-source_type,
-created_at,
-user_id
-)
-VALUES
-(
-%s,
-%s,
-%s,
-%s,
-%s,
-NOW() AT TIME ZONE 'Asia/Kolkata',
-%s
-)
-""",(
-user_text,
-highest_similarity,
-risk_level,
-total_sources,
-selected_source,
-user_id
-))
+        # Save ONLY for logged-in users
+        if user_id:
+            conn = get_db_connection()
+            cursor = conn.cursor()
 
-        conn.commit()
-        cursor.close()
-        conn.close()
+            cursor.execute(
+                """
+                INSERT INTO cross_verify_logs
+                (
+                    input_text,
+                    highest_similarity,
+                    risk_level,
+                    total_sources,
+                    source_type,
+                    created_at,
+                    user_id
+                )
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    NOW() AT TIME ZONE 'Asia/Kolkata',
+                    %s
+                )
+                """,
+                (
+                    user_text,
+                    highest_similarity,
+                    risk_level,
+                    total_sources,
+                    selected_source,
+                    user_id
+                )
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
 
         return jsonify(result)
 
@@ -552,15 +562,15 @@ def extract_pdf():
 # Prediction API
 # ----------------------------
 @app.route("/predict", methods=["POST"])
-@jwt_required()
 def predict():
 
-    user_id = int(get_jwt_identity())
-    print("Logged in User ID:", user_id)
+    # JWT is OPTIONAL
+    verify_jwt_in_request(optional=True)
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-   
+    identity = get_jwt_identity()
+    user_id = int(identity) if identity else None
+
+    print("Logged in User ID:", user_id)
 
     data = request.get_json()
     text = data.get("text", "")
@@ -572,10 +582,7 @@ def predict():
     sentiment = get_sentiment(cleaned)
     word_count = len(cleaned.split())
 
-
     X_tfidf = tfidf.transform([cleaned])
-    
-
     X_final = hstack([X_tfidf])
 
     prediction = model.predict(X_final)[0]
@@ -584,24 +591,48 @@ def predict():
     prediction_label = "Fake" if prediction == 0 else "Real"
     confidence_val = float(confidence)
 
-    cursor.execute("""INSERT INTO analysis_logs(input_text,prediction,confidence,created_at,user_id)VALUES(%s,%s,%s,NOW() AT TIME ZONE 'Asia/Kolkata',%s)""",(
-text,
-prediction_label,
-confidence_val,
-user_id
-)
-)   
-    conn.commit()
+    # Save ONLY for logged-in users
+    if user_id:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    cursor.close()
-    conn.close()
-    
+        cursor.execute(
+            """
+            INSERT INTO analysis_logs
+            (
+                input_text,
+                prediction,
+                confidence,
+                created_at,
+                user_id
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                NOW() AT TIME ZONE 'Asia/Kolkata',
+                %s
+            )
+            """,
+            (
+                text,
+                prediction_label,
+                confidence_val,
+                user_id
+            )
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
     return jsonify({
-    "label": prediction_label,
-    "confidence": round(confidence_val, 3),
-    "word_count": word_count,
-    "sentiment": round(float(sentiment), 3)
-})
+        "label": prediction_label,
+        "confidence": round(confidence_val, 3),
+        "word_count": word_count,
+        "sentiment": round(float(sentiment), 3)
+    })
 
     
 
@@ -787,12 +818,13 @@ def extract_stylometric_features(cleaned):
 # AI Detection Route
 # ----------------------------
 @app.route("/ai-detect", methods=["POST"])
-@jwt_required()
 def ai_detect():
-    user_id = int(get_jwt_identity())
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    # JWT is OPTIONAL
+    verify_jwt_in_request(optional=True)
+
+    identity = get_jwt_identity()
+    user_id = int(identity) if identity else None
 
     data = request.get_json()
     text = data.get("text", "")
@@ -819,52 +851,56 @@ def ai_detect():
     ai_prob = float(probabilities[1])
     human_prob = float(probabilities[0])
 
-    # Confidence (correct placement)
     confidence = round(max(ai_prob, human_prob) * 100, 2)
 
     result_label = "AI Generated" if prediction == 1 else "Human Written"
 
     print("========== AI DETECT ==========")
-    print("JWT Identity:", get_jwt_identity())
     print("User ID:", user_id)
     print("Result:", result_label)
     print("Confidence:", confidence)
 
-    try:
-        cursor.execute(
-"""
-INSERT INTO ai_detection_logs
-(
-input_text,
-result,
-confidence,
-created_at,
-user_id
-)
-VALUES
-(
-%s,
-%s,
-%s,
-NOW() AT TIME ZONE 'Asia/Kolkata',
-%s
-)
-""",
-(
-text,
-result_label,
-confidence,
-user_id
-)
-)
-    
-        conn.commit()
-    except Exception as e:
-        print("DB Error:", e)
-    
+    # Save ONLY for logged-in users
+    if user_id:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    cursor.close()
-    conn.close()
+        try:
+            cursor.execute(
+                """
+                INSERT INTO ai_detection_logs
+                (
+                    input_text,
+                    result,
+                    confidence,
+                    created_at,
+                    user_id
+                )
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s,
+                    NOW() AT TIME ZONE 'Asia/Kolkata',
+                    %s
+                )
+                """,
+                (
+                    text,
+                    result_label,
+                    confidence,
+                    user_id
+                )
+            )
+
+            conn.commit()
+
+        except Exception as e:
+            print("DB Error:", e)
+
+        finally:
+            cursor.close()
+            conn.close()
 
     return jsonify({
         "prediction": result_label,
@@ -872,8 +908,6 @@ user_id
         "human_probability": round(human_prob * 100, 2),
         "confidence": confidence
     })
-    
-
 # ----------------------------
 # Reusable Prediction Function
 # ----------------------------

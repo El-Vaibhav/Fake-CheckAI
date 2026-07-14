@@ -10,6 +10,8 @@ export default function ProtectedRoute({
 }: Props) {
   const { isAuthenticated, loading } = useAuth();
 
+  const isGuest = localStorage.getItem("guest") === "true";
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-lg">
@@ -18,7 +20,8 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!isAuthenticated) {
+  // Allow authenticated users OR guests
+  if (!isAuthenticated && !isGuest) {
     return <Navigate to="/login" replace />;
   }
 

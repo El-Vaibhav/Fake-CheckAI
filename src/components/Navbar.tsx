@@ -26,12 +26,22 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const navigate = useNavigate();
+  const handleGuestMode = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    localStorage.setItem("guest", "true");
+
+    navigate("/app");
+  };
 
   const {
     user,
     logout,
     isAuthenticated,
   } = useAuth();
+
+  const isGuest = localStorage.getItem("guest") === "true";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -110,7 +120,7 @@ export function Navbar() {
               </Button>
             </a>
 
-            {!isAuthenticated ? (
+            {!isAuthenticated && !isGuest ? (
               <div className="hidden sm:flex items-center gap-2">
 
                 <Button
@@ -121,6 +131,13 @@ export function Navbar() {
                 </Button>
 
                 <Button
+                  variant="secondary"
+                  onClick={handleGuestMode}
+                >
+                  Continue as Guest
+                </Button>
+
+                <Button
                   variant="hero"
                   onClick={() => navigate("/register")}
                 >
@@ -128,7 +145,31 @@ export function Navbar() {
                 </Button>
 
               </div>
+            ) : isGuest ? (
+
+              <div className="hidden sm:flex items-center gap-2">
+
+                <Button
+                  variant="secondary"
+                  disabled
+                >
+                  👤 Guest
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    localStorage.removeItem("guest");
+                    navigate("/login");
+                  }}
+                >
+                  Login
+                </Button>
+
+              </div>
+
             ) : (
+
               <div className="hidden sm:flex items-center gap-2">
 
                 <Button
@@ -208,7 +249,7 @@ export function Navbar() {
           ))}
           <div className="pt-2">
             <a href="#detect" onClick={() => setIsMobileMenuOpen(false)}>
-              {!isAuthenticated ? (
+              {!isAuthenticated && !isGuest ? (
                 <div className="space-y-2">
 
                   <Button
@@ -224,6 +265,17 @@ export function Navbar() {
 
                   <Button
                     className="w-full"
+                    variant="secondary"
+                    onClick={() => {
+                      handleGuestMode();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Continue as Guest
+                  </Button>
+
+                  <Button
+                    className="w-full"
                     variant="hero"
                     onClick={() => {
                       navigate("/register");
@@ -234,6 +286,32 @@ export function Navbar() {
                   </Button>
 
                 </div>
+              ) : isGuest ? (
+
+                <div className="space-y-2">
+
+                  <Button
+                    className="w-full"
+                    variant="secondary"
+                    disabled
+                  >
+                    👤 Guest Mode
+                  </Button>
+
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => {
+                      localStorage.removeItem("guest");
+                      navigate("/login");
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Login
+                  </Button>
+
+                </div>
+
               ) : (
                 <div className="space-y-2">
 
