@@ -16,7 +16,7 @@ import requests
 from scipy.sparse import hstack
 from nltk.tokenize import sent_tokenize
 import numpy as np
-
+from collections import Counter
 # ML + NLP
 from scipy.sparse import hstack
 from textblob import TextBlob
@@ -94,7 +94,6 @@ tfidf = bundle["tfidf"]
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
 
-from collections import Counter
 
 @app.route("/cross-verify", methods=["POST"])
 def cross_verify():
@@ -112,14 +111,11 @@ def cross_verify():
 
     user_text = data.get("text") if data else None
 
-    print("Received text:", repr(user_text))
-    print("Length:", len(user_text.strip()) if user_text else 0)
-
     if not user_text or len(user_text.strip()) < 20:
-     return jsonify({"error": "Invalid or empty text"}), 400
+        return jsonify({"error": "Invalid or empty text"}), 400
 
     try:
-        # Run similarity check
+
         result = check_web_similarity(user_text)
 
         highest_similarity = result.get("highest_similarity", 0)
@@ -128,52 +124,54 @@ def cross_verify():
         sources = result.get("sources", [])
         total_sources = len(sources)
 
-        if sources:
-            selected_source = sources[0].get("source_type", "Blogs")
-        else:
-            selected_source = "Unknown"
+        if user_id and sources:
 
-        print("========== CROSS VERIFY ==========")
-        print("User ID:", user_id)
-        print("Selected Source:", selected_source)
-
-        # Save ONLY for logged-in users
-        if user_id:
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            cursor.execute(
-                """
-                INSERT INTO cross_verify_logs
-                (
-                    input_text,
-                    highest_similarity,
-                    risk_level,
-                    total_sources,
-                    source_type,
-                    created_at,
-                    user_id
+            # Keep only UNIQUE source types
+            unique_sources = {
+                src.get("source_type", "Other")
+                for src in sources
+            }
+
+            print("Unique Sources:", unique_sources)
+
+            # Insert each unique source ONLY ONCE
+            for source_type in unique_sources:
+
+                cursor.execute(
+                    """
+                    INSERT INTO cross_verify_logs
+                    (
+                        input_text,
+                        highest_similarity,
+                        risk_level,
+                        total_sources,
+                        source_type,
+                        created_at,
+                        user_id
+                    )
+                    VALUES
+                    (
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        NOW() AT TIME ZONE 'Asia/Kolkata',
+                        %s
+                    )
+                    """,
+                    (
+                        user_text,
+                        highest_similarity,
+                        risk_level,
+                        total_sources,
+                        source_type,
+                        user_id
+                    )
                 )
-                VALUES
-                (
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    NOW() AT TIME ZONE 'Asia/Kolkata',
-                    %s
-                )
-                """,
-                (
-                    user_text,
-                    highest_similarity,
-                    risk_level,
-                    total_sources,
-                    selected_source,
-                    user_id
-                )
-            )
 
             conn.commit()
             cursor.close()
